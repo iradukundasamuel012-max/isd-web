@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ISD — scroll sideways into what you love</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1a16; --ink-soft:#5a564c; --paper:#f7f5ef; --paper-raised:#ffffff;
+    --line:#e4e0d5; --teal:#33685c; --teal-deep:#234a41; --teal-tint:#eaf2ef;
+    --mustard:#e2a63a; --mustard-soft:#f4dfb0; --live-red:#d94b3f; --brand-blue:#2563eb;
+    --shadow: 0 1px 2px rgba(28,26,22,0.04), 0 8px 24px -12px rgba(28,26,22,0.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope', sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.01em; margin:0;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+  :focus-visible{outline:2.5px solid var(--teal); outline-offset:2px;}
+  img,svg{max-width:100%;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:60; display:flex; align-items:center; gap:14px;
+    padding:10px 20px; background:rgba(247,245,239,0.94); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line); flex-wrap:nowrap;
+  }
+  .icon-btn{width:38px; height:38px; border-radius:50%; border:none; background:transparent; display:flex; align-items:center; justify-content:center; font-size:17px; transition:background .15s; flex:none;}
+  .icon-btn:hover{background:#eee9dd;}
+  .logo{display:flex; align-items:baseline; gap:7px; cursor:pointer; flex:none;}
+  .logo .mark{font-family:'Fraunces', serif; font-weight:700; font-size:21px; letter-spacing:-0.02em; color:var(--brand-blue);}
+  .logo .tag{font-size:10px; color:var(--ink-soft); letter-spacing:0.03em; font-family:'JetBrains Mono', monospace; white-space:nowrap;}
+  .search-wrap{flex:1; display:flex; justify-content:center; min-width:0;}
+  .search-bar-outer{position:relative; width:100%; max-width:520px;}
+  .search-bar{display:flex; width:100%;}
+  .search-bar input{flex:1; min-width:0; padding:9px 15px; border:1.5px solid var(--line); border-right:none; border-radius:999px 0 0 999px; font-size:13.5px; font-family:inherit; background:var(--paper-raised);}
+  .search-bar input:focus{outline:none; border-color:var(--teal);}
+  .search-bar button{width:44px; flex:none; border:1.5px solid var(--line); border-left:none; background:#f0eee6; border-radius:0 999px 999px 0; font-size:14px;}
+  .search-suggest{
+    display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:70;
+    background:var(--paper-raised); border:1.5px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+    padding:6px; max-height:260px; overflow-y:auto;
+  }
+  .search-suggest.show{display:block;}
+  .search-suggest .sugg-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:800; padding:8px 10px 4px;}
+  .search-suggest .sugg-item{display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;}
+  .search-suggest .sugg-item:hover{background:var(--teal-tint);}
+  .search-suggest .sugg-item .clear-x{margin-left:auto; color:var(--ink-soft); font-size:12px;}
+  .header-actions{display:flex; align-items:center; gap:6px; flex:none;}
+  .create-dropdown-wrap{position:relative;}
+  .create-dropdown-wrap.hidden{display:none;}
+  .create-dropdown-menu{position:absolute; top:calc(100% + 8px); right:0; background:var(--paper-raised); border:1.5px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:6px; min-width:180px; z-index:80;}
+  .create-dropdown-menu.hidden{display:none;}
+  .dropdown-item{display:block; width:100%; text-align:left; padding:10px 12px; border-radius:8px; background:transparent; border:none; font-size:13px; font-weight:600; color:var(--ink);}
+  .dropdown-item:hover{background:var(--teal-tint);}
+  .upload-field{margin-bottom:14px;}
+  .upload-field label{display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:6px;}
+  .upload-field input, .upload-field select, .upload-field textarea{width:100%; padding:9px 12px; border:1.5px solid var(--line); border-radius:9px; font-family:inherit; font-size:13.5px; background:var(--paper);}
+  .upload-field textarea{resize:vertical; min-height:80px;}
+  .btn{border:none; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:700; transition:transform .12s, box-shadow .12s; white-space:nowrap;}
+  .btn:active{transform:scale(0.97);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-solid{background:var(--teal); color:#fff;}
+  .btn-solid:hover{background:var(--teal-deep); box-shadow:var(--shadow);}
+  .avatar-btn{width:34px; height:34px; border-radius:50%; border:none; background:var(--teal); color:#fff; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; flex:none;}
+
+  /* ---------- App shell ---------- */
+  .app-body{display:flex; align-items:flex-start; position:relative;}
+  .sidebar{
+    width:222px; flex:none; background:var(--paper-raised); border-right:1px solid var(--line);
+    position:sticky; top:59px; height:calc(100vh - 59px); overflow-y:auto; z-index:55;
+    padding:14px 10px 40px; transition:width .18s ease;
+  }
+  .sidebar.collapsed{width:74px;}
+  .sidebar.collapsed .label, .sidebar.collapsed .side-section-title{display:none;}
+  .sidebar.collapsed .side-item{justify-content:center;}
+  .side-item{display:flex; align-items:center; gap:14px; padding:10px 12px; border-radius:10px; font-size:13.5px; font-weight:600; color:var(--ink); white-space:nowrap; margin-bottom:2px; cursor:pointer;}
+  .side-item .ic{font-size:16px; width:20px; text-align:center; flex:none;}
+  .side-item:hover{background:#f0eee6;}
+  .side-item.active{background:var(--teal-tint); color:var(--teal-deep);}
+  .side-section-title{font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin:16px 12px 6px; font-weight:800;}
+  .side-divider{height:1px; background:var(--line); margin:12px 4px;}
+  .sidebar-backdrop{display:none; position:fixed; inset:0; background:rgba(28,26,22,0.35); z-index:50;}
+  .sidebar-backdrop.show{display:block;}
+
+  .content{flex:1; min-width:0;}
+
+  /* ---------- Filter pills ---------- */
+  .pill-row{display:flex; gap:9px; overflow-x:auto; padding:16px 22px; border-bottom:1px solid var(--line);}
+  .pill{flex:none; padding:8px 15px; border-radius:20px; background:var(--paper-raised); font-size:12.5px; font-weight:700; border:1.5px solid var(--line); color:var(--ink); transition:background .15s, border-color .15s, color .15s;}
+  .pill:hover{border-color:var(--teal);}
+  .pill.active{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .pill.live-pill.active{background:var(--live-red); border-color:var(--live-red);}
+
+  .view{display:none;}
+  .view.visible{display:block;}
+
+  /* ---------- Shelves ---------- */
+  .shelves{max-width:1180px; margin:8px auto 70px; padding:0 22px;}
+  .shelf{margin-bottom:38px;}
+  .shelf-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;}
+  .shelf-head h3{font-size:18px;}
+  .shelf-head .count{font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace;}
+  .shelf-nav{display:flex; gap:8px;}
+  .shelf-nav button{width:32px; height:32px; border-radius:50%; border:1.5px solid var(--line); background:var(--paper-raised); font-size:13px; display:flex; align-items:center; justify-content:center; transition:background .15s, border-color .15s;}
+  .shelf-nav button:hover{border-color:var(--teal); color:var(--teal);}
+
+  .track{display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px; scroll-behavior:smooth;}
+  .track::-webkit-scrollbar{height:6px;}
+  .track::-webkit-scrollbar-thumb{background:var(--line); border-radius:10px;}
+  .track::-webkit-scrollbar-thumb:hover{background:var(--teal);}
+
+  .card{flex:none; width:clamp(150px, 40vw, 236px); scroll-snap-align:start; cursor:pointer;}
+  .thumb{width:100%; aspect-ratio:16/9; border-radius:12px; position:relative; overflow:hidden; box-shadow:var(--shadow);}
+  .thumb .dur{position:absolute; bottom:8px; right:8px; background:rgba(20,18,15,0.72); color:#fff; font-size:10.5px; padding:2px 6px; border-radius:5px; font-family:'JetBrains Mono', monospace;}
+  .thumb .live-tag{position:absolute; top:8px; left:8px; background:var(--live-red); color:#fff; font-weight:800; font-size:10px; padding:3px 8px; border-radius:5px; display:flex; align-items:center; gap:5px;}
+  .thumb .live-tag::before{content:""; width:6px; height:6px; border-radius:50%; background:#fff; animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+  .card-title{font-size:13.5px; font-weight:700; margin-top:9px; line-height:1.35;}
+  .card-meta{display:flex; align-items:center; gap:8px; margin-top:6px;}
+  .avatar{width:20px; height:20px; border-radius:50%; flex:none;}
+  .card-meta .who{font-size:11.5px; color:var(--ink-soft); font-weight:600;}
+  .card-stats{margin-top:4px; font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace;}
+
+  /* ---------- Live view ---------- */
+  .live-hero{display:grid; grid-template-columns:2fr 1fr; gap:20px; padding:24px 22px 8px; max-width:1180px; margin:0 auto;}
+  .live-player{border-radius:16px; overflow:hidden; position:relative; aspect-ratio:16/9; background:linear-gradient(135deg,#234a41,#33685c); box-shadow:var(--shadow);}
+  .live-badge{position:absolute; top:14px; left:14px; background:var(--live-red); color:#fff; font-weight:800; font-size:11px; padding:5px 10px; border-radius:6px; display:flex; align-items:center; gap:6px;}
+  .live-badge::before{content:""; width:7px; height:7px; border-radius:50%; background:#fff; animation:pulse 1.4s infinite;}
+  .live-viewers{position:absolute; bottom:14px; left:14px; background:rgba(20,18,15,0.72); color:#fff; font-size:11px; padding:4px 10px; border-radius:6px; font-family:'JetBrains Mono', monospace;}
+  .live-info h2{font-size:19px; margin-top:14px;}
+  .live-info .who{margin-top:8px; display:flex; gap:10px; align-items:center; font-size:13px; color:var(--ink-soft); font-weight:600;}
+  .live-info p.desc{margin-top:10px; font-size:13px; color:var(--ink-soft); line-height:1.6; max-width:640px;}
+  .live-chat{border:1.5px solid var(--line); border-radius:14px; padding:16px; background:var(--paper-raised); height:fit-content;}
+  .live-chat h4{font-size:13px; margin-bottom:12px;}
+  .chat-msg{font-size:12px; margin-bottom:10px; line-height:1.4;}
+  .chat-msg b{color:var(--teal-deep);}
+  .live-shelf-wrap{max-width:1180px; margin:30px auto 70px; padding:0 22px;}
+
+  /* ---------- Reels view ---------- */
+  #view-reels{height:calc(100vh - 118px); position:relative;}
+  .reels-container{display:flex; overflow-x:auto; scroll-snap-type:x mandatory; height:100%; scroll-behavior:smooth;}
+  .reel-slide{flex:none; width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; position:relative;}
+  .reel-frame{height:92%; aspect-ratio:9/16; max-width:92vw; border-radius:20px; position:relative; overflow:hidden; box-shadow:var(--shadow);}
+  .reel-topbar{position:absolute; top:14px; left:0; right:0; text-align:center; color:rgba(255,255,255,0.75); font-size:10.5px; font-family:'JetBrains Mono', monospace; letter-spacing:0.05em;}
+  .reel-bottom{position:absolute; left:16px; right:66px; bottom:18px; color:#fff;}
+  .reel-bottom .who{display:flex; align-items:center; gap:8px; font-weight:700; font-size:13.5px;}
+  .reel-bottom .cap{margin-top:6px; font-size:12.5px; opacity:0.92; line-height:1.4;}
+  .reel-actions{position:absolute; right:12px; bottom:24px; display:flex; flex-direction:column; gap:16px; align-items:center;}
+  .reel-actions button{background:rgba(255,255,255,0.18); backdrop-filter:blur(4px); border:none; width:42px; height:42px; border-radius:50%; color:#fff; font-size:17px;}
+  .reel-actions .ct{color:#fff; font-size:10.5px; margin-top:-8px; font-family:'JetBrains Mono', monospace;}
+  .reel-arrow{position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:1.5px solid var(--line); background:var(--paper-raised); box-shadow:var(--shadow); font-size:14px; z-index:5;}
+  .reel-arrow.left{left:16px;} .reel-arrow.right{right:16px;}
+
+  /* ---------- Watch page ---------- */
+  .watch-wrap{max-width:1180px; margin:0 auto; padding:22px; display:grid; grid-template-columns:2.1fr 1fr; gap:26px; align-items:start;}
+  .back-link{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:14px; cursor:pointer;}
+  .back-link:hover{color:var(--teal-deep);}
+  .watch-player{aspect-ratio:16/9; border-radius:14px; background:linear-gradient(135deg,#1c1a16,#3a352c); position:relative; overflow:hidden; box-shadow:var(--shadow);}
+  .watch-player .play-overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; color:rgba(255,255,255,0.85);}
+  .watch-player .bar{position:absolute; left:0; right:0; bottom:0; height:5px; background:rgba(255,255,255,0.18);}
+  .watch-player .bar::after{content:""; position:absolute; left:0; top:0; bottom:0; width:22%; background:var(--mustard);}
+  .watch-title{font-size:19px; margin-top:16px; line-height:1.3;}
+  .watch-row{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:14px;}
+  .channel-block{display:flex; align-items:center; gap:12px;}
+  .avatar-lg{width:42px; height:42px; border-radius:50%; flex:none;}
+  .channel-name{font-size:14px; font-weight:700;}
+  .channel-subs{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .subscribe-btn{margin-left:10px; padding:9px 18px;}
+  .watch-actions{display:flex; gap:8px;}
+  .pill-action{padding:8px 14px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper-raised); font-size:12.5px; font-weight:700;}
+  .pill-action:hover{border-color:var(--teal);}
+  .pill-action.active{background:var(--teal-tint); border-color:var(--teal); color:var(--teal-deep);}
+  .subscribe-btn.subscribed{background:var(--paper-raised); color:var(--ink); border:1.5px solid var(--line);}
+  .watch-desc{margin-top:16px; background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+  .watch-meta{font-size:12px; font-weight:700; color:var(--ink-soft); font-family:'JetBrains Mono', monospace;}
+  .watch-desc p{font-size:13px; color:var(--ink-soft); line-height:1.6; margin:8px 0 0;}
+  .comments{margin-top:26px;}
+  .comments h4{font-size:15.5px;}
+  .add-comment{display:flex; align-items:center; gap:12px; margin:16px 0 22px;}
+  .add-comment input{flex:1; border:none; border-bottom:1.5px solid var(--line); padding:8px 2px; font-size:13.5px; font-family:inherit; background:transparent;}
+  .add-comment input:focus{outline:none; border-color:var(--teal);}
+  .comment{display:flex; gap:12px; margin-bottom:20px;}
+  .comment .avatar{width:32px; height:32px;}
+  .comment-body .cu{font-size:12.5px; font-weight:700;}
+  .comment-body .ct{font-size:11px; color:var(--ink-soft); font-weight:500; margin-left:6px;}
+  .comment-body p{font-size:13px; margin:5px 0 6px; line-height:1.5;}
+  .comment-actions{display:flex; gap:14px; font-size:11.5px; color:var(--ink-soft); font-weight:700;}
+
+  .watch-side{display:flex; flex-direction:column; gap:12px;}
+  .rel-card{display:flex; gap:10px; cursor:pointer;}
+  .rel-thumb{width:150px; flex:none; aspect-ratio:16/9; border-radius:10px; box-shadow:var(--shadow);}
+  .rel-title{font-size:13px; font-weight:700; line-height:1.3;}
+  .rel-meta{font-size:11px; color:var(--ink-soft); margin-top:4px;}
+
+  /* ---------- Search results + simple list pages ---------- */
+  .page-wrap{max-width:1180px; margin:0 auto; padding:26px 22px 70px;}
+  .page-wrap h2{font-size:20px; margin-bottom:4px;}
+  .page-sub{font-size:12.5px; color:var(--ink-soft); margin-bottom:20px;}
+  .results-grid{display:flex; flex-wrap:wrap; gap:20px;}
+  .empty-state{border:1.5px dashed var(--line); border-radius:14px; padding:34px 20px; text-align:center; color:var(--ink-soft); font-size:13.5px;}
+  .simple-list{display:flex; flex-direction:column; gap:4px; max-width:640px;}
+  .simple-list .rel-card{align-items:center;}
+  .simple-list .rel-thumb{width:120px;}
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px;}
+  .hist-chip{display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--paper-raised); font-size:12.5px; font-weight:600; cursor:pointer;}
+  .hist-chip:hover{border-color:var(--teal);}
+  .hist-chip .x{color:var(--ink-soft); font-size:11px;}
+  .subs-row{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); max-width:520px;}
+  .subs-row .channel-name{font-size:13.5px;}
+  .playlist-new{margin-top:10px; padding:9px 16px;}
+  .channel-header{display:flex; align-items:center; gap:20px; flex-wrap:wrap;}
+  .channel-header h2{font-size:22px;}
+  .channel-bio{font-size:13px; color:var(--ink-soft); margin-top:6px; max-width:480px; line-height:1.5;}
+  .channel-block{cursor:pointer;}
+
+  /* ---------- Modals ---------- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(28,26,22,0.55); display:flex; align-items:center; justify-content:center; z-index:200; padding:18px;}
+  .modal-overlay.hidden{display:none;}
+  .hidden{display:none !important;}
+  .modal-card{background:var(--paper-raised); border-radius:20px; padding:36px 32px; max-width:380px; width:100%; box-shadow:var(--shadow); text-align:center; position:relative; max-height:90vh; overflow-y:auto;}
+  .modal-card.wide{max-width:640px; text-align:left;}
+  .modal-close{position:absolute; top:14px; right:16px; background:none; border:none; font-size:16px; color:var(--ink-soft);}
+  .modal-card .mark{font-family:'Fraunces', serif; font-weight:700; font-size:25px;}
+  .modal-card .sub{font-size:13px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+  .auth-btn{width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:12px; font-weight:700; font-size:13.5px; margin-top:14px; border:1.5px solid var(--line); background:var(--paper-raised);}
+  .auth-btn:hover{border-color:var(--teal);}
+  .auth-btn.guest{background:var(--paper);}
+  .modal-foot{margin-top:20px; font-size:12px; color:var(--ink-soft);}
+  .modal-foot a{color:var(--teal-deep); font-weight:700; text-decoration:underline; cursor:pointer;}
+
+  .create-form{display:grid; grid-template-columns:0.9fr 1.1fr; gap:28px;}
+  .create-form h2{font-size:21px; margin-bottom:8px;}
+  .create-form p.lede{color:var(--ink-soft); font-size:13.5px; line-height:1.6;}
+  .field{margin-top:14px;}
+  .field label{font-size:11.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em;}
+  .field input{width:100%; margin-top:6px; padding:11px 12px; border-radius:10px; border:1.5px solid var(--line); font-size:13.5px; font-family:inherit; background:var(--paper);}
+  .field input:focus{outline:none; border-color:var(--teal);}
+  .field-hint{font-size:11px; color:var(--ink-soft); margin-top:4px;}
+  .pw-wrap{position:relative;}
+  .pw-toggle{position:absolute; right:10px; top:32px; background:none; border:none; font-size:11.5px; font-weight:700; color:var(--teal-deep);}
+  .purpose-label{font-size:11.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:9px; display:block;}
+  .purpose-scroll{display:flex; gap:9px; overflow-x:auto; padding-bottom:8px;}
+  .purpose-chip{flex:none; border:1.5px solid var(--line); background:var(--paper); border-radius:14px; padding:12px 14px; width:108px; display:flex; flex-direction:column; gap:6px; transition:border-color .15s, background .15s;}
+  .purpose-chip .ic{font-size:19px;}
+  .purpose-chip .lb{font-size:12px; font-weight:700;}
+  .purpose-chip.selected{border-color:var(--teal); background:var(--teal-tint);}
+  .signup-submit{margin-top:18px; width:100%; padding:12px; border-radius:12px; font-size:14px;}
+  .microcopy{margin-top:10px; font-size:11.5px; color:var(--ink-soft);}
+
+  footer{border-top:1px solid var(--line); padding:26px 22px; display:flex; justify-content:space-between; align-items:center; max-width:1180px; margin:0 auto; font-size:11.5px; color:var(--ink-soft); flex-wrap:wrap; gap:8px;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1080px){
+    .watch-wrap{grid-template-columns:1fr;}
+    .watch-side{flex-direction:row; overflow-x:auto; gap:14px;}
+    .rel-card{flex-direction:column; width:200px; flex:none;}
+    .rel-thumb{width:100%;}
+  }
+  @media (max-width:920px){
+    .sidebar{position:fixed; left:0; top:59px; z-index:56; box-shadow:var(--shadow);}
+    .sidebar:not(.collapsed){width:216px;}
+    .sidebar.collapsed{width:0; padding:0; border:none; overflow:hidden;}
+    .create-form{grid-template-columns:1fr;}
+    .live-hero{grid-template-columns:1fr;}
+  }
+  @media (max-width:700px){
+    .search-wrap{display:none;}
+    header{padding:9px 14px; gap:10px;}
+    .logo .tag{display:none;}
+    .pill-row{padding:12px 14px;}
+    .shelves, .live-shelf-wrap{padding:0 14px;}
+    .watch-wrap{padding:14px;}
+    .btn.btn-solid#createAccountBtn{padding:8px 12px; font-size:12px;}
+  }
+  @media (max-width:480px){
+    .avatar-btn{width:30px; height:30px;}
+    .icon-btn{width:32px; height:32px; font-size:15px;}
+    .card{width:clamp(130px, 60vw, 200px);}
+    .reel-arrow{width:34px; height:34px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= Auth modal (first visit) ================= -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-card">
+    <div class="mark">ISD</div>
+    <p class="sub">Pick how you'd like to browse today.</p>
+    <button class="auth-btn" id="googleBtn">Continue with Google</button>
+    <button class="auth-btn guest" id="guestBtn">Continue as Guest</button>
+    <p class="modal-foot">New here and want your own channel? <a id="gotoSignup">Create an ISD account</a></p>
+  </div>
+</div>
+
+<!-- ================= Create account modal ================= -->
+<div class="modal-overlay hidden" id="createModal">
+  <div class="modal-card wide">
+    <button class="modal-close" id="closeCreateModal" aria-label="Close">✕</button>
+    <div class="create-form">
+      <div>
+        <h2>Create your ISD account</h2>
+        <p class="lede">Set a password to keep your channel secure — you'll need it to sign back in and manage what you post.</p>
+        <div class="field"><label for="email">Email</label><input id="email" type="email" placeholder="you@school.edu"></div>
+        <div class="field"><label for="uname">Display name</label><input id="uname" type="text" placeholder="e.g. clara.paints"></div>
+        <div class="field pw-wrap">
+          <label for="pw">Password</label>
+          <input id="pw" type="password" placeholder="At least 8 characters">
+          <button type="button" class="pw-toggle" data-target="pw">Show</button>
+          <div class="field-hint">Use 8+ characters. This is what protects your channel.</div>
+        </div>
+        <div class="field pw-wrap">
+          <label for="pw2">Confirm password</label>
+          <input id="pw2" type="password" placeholder="Retype your password">
+          <button type="button" class="pw-toggle" data-target="pw2">Show</button>
+        </div>
+      </div>
+      <div>
+        <span class="purpose-label">What brings you to ISD?</span>
+        <div class="purpose-scroll" id="purposeRow">
+          <button class="purpose-chip" data-purpose="Entertain"><span class="lb">Entertain</span></button>
+          <button class="purpose-chip" data-purpose="Sport"><span class="lb">Sport</span></button>
+          <button class="purpose-chip" data-purpose="Education"><span class="lb">Education</span></button>
+          <button class="purpose-chip" data-purpose="Business"><span class="lb">Business</span></button>
+        </div>
+        <button class="btn btn-solid signup-submit" id="submitBtn">Create account</button>
+        <p class="microcopy" id="submitMsg">Pick a focus and set a password to continue.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Share modal ================= -->
+<div class="modal-overlay hidden" id="shareModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeShareModal" aria-label="Close">✕</button>
+    <div class="mark" style="font-size:19px;">Share this video</div>
+    <p class="sub" id="shareSub">—</p>
+    <button class="auth-btn" data-platform="whatsapp">🟢 WhatsApp</button>
+    <button class="auth-btn" data-platform="telegram">🔵 Telegram</button>
+    <button class="auth-btn" data-platform="instagram">🟣 Instagram</button>
+    <button class="auth-btn" data-platform="tiktok">⚫ TikTok</button>
+    <p class="modal-foot" id="shareNote"></p>
+  </div>
+</div>
+
+<!-- ================= Download modal ================= -->
+<div class="modal-overlay hidden" id="downloadModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeDownloadModal" aria-label="Close">✕</button>
+    <div class="mark" style="font-size:19px;">Download</div>
+    <p class="sub" id="downloadSub">—</p>
+    <button class="auth-btn" data-format="mp4-1080">🎬 MP4 — 1080p</button>
+    <button class="auth-btn" data-format="mp4-480">🎬 MP4 — 480p (smaller file)</button>
+    <button class="auth-btn" data-format="mp3">🎵 MP3 — audio only</button>
+    <p class="modal-foot">This demo saves a placeholder file to your device so you can see how the flow works — there's no real video behind it yet.</p>
+  </div>
+</div>
+
+<!-- ================= Upload video modal ================= -->
+<div class="modal-overlay hidden" id="uploadVideoModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeUploadVideoModal" aria-label="Close">✕</button>
+    <div class="mark" style="font-size:19px;">Upload a video</div>
+    <div class="upload-field" style="margin-top:16px;"><label for="uvTitle">Title</label><input id="uvTitle" type="text" placeholder="e.g. My first workshop tour"></div>
+    <div class="upload-field"><label for="uvCategory">Category</label>
+      <select id="uvCategory">
+        <option value="shelf-entertain">Entertain</option>
+        <option value="shelf-sport">Sport</option>
+        <option value="shelf-education">Education</option>
+        <option value="shelf-business">Business</option>
+      </select>
+    </div>
+    <div class="upload-field"><label for="uvDuration">Duration</label><input id="uvDuration" type="text" placeholder="e.g. 6:20"></div>
+    <button class="btn btn-solid" id="uvSubmit" style="width:100%;">Upload video</button>
+    <p class="modal-foot" id="uvMsg"></p>
+  </div>
+</div>
+
+<!-- ================= Upload reel modal ================= -->
+<div class="modal-overlay hidden" id="uploadReelModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeUploadReelModal" aria-label="Close">✕</button>
+    <div class="mark" style="font-size:19px;">Upload a reel</div>
+    <div class="upload-field" style="margin-top:16px;"><label for="urCaption">Caption</label><textarea id="urCaption" placeholder="Say something about this reel..."></textarea></div>
+    <button class="btn btn-solid" id="urSubmit" style="width:100%;">Upload reel</button>
+    <p class="modal-foot" id="urMsg"></p>
+  </div>
+</div>
+
+<!-- ================= Go live modal ================= -->
+<div class="modal-overlay hidden" id="goLiveModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeGoLiveModal" aria-label="Close">✕</button>
+    <div class="mark" style="font-size:19px;">Go live</div>
+    <div class="upload-field" style="margin-top:16px;"><label for="glTitle">Stream title</label><input id="glTitle" type="text" placeholder="What are you streaming?"></div>
+    <button class="btn btn-solid" id="glSubmit" style="width:100%;">Start live stream</button>
+    <p class="modal-foot" id="glMsg"></p>
+  </div>
+</div>
+
+<!-- ================= Create post modal ================= -->
+<div class="modal-overlay hidden" id="createPostModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeCreatePostModal" aria-label="Close">✕</button>
+    <div class="mark" style="font-size:19px;">Create a post</div>
+    <div class="upload-field" style="margin-top:16px;"><label for="cpText">What's on your mind?</label><textarea id="cpText" placeholder="Share an update with your subscribers..."></textarea></div>
+    <button class="btn btn-solid" id="cpSubmit" style="width:100%;">Post</button>
+    <p class="modal-foot" id="cpMsg"></p>
+  </div>
+</div>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<header>
+  <button class="icon-btn" id="sidebarToggle" aria-label="Toggle menu">☰</button>
+  <div class="logo" id="logoHome">
+    <span class="mark">ISD</span>
+  </div>
+  <div class="search-wrap">
+    <div class="search-bar-outer">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search hobbies, creators, clips" autocomplete="off">
+        <button aria-label="Search" id="searchBtn">🔍</button>
+      </div>
+      <div class="search-suggest" id="searchSuggest"></div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-solid" id="createAccountBtn">Create account</button>
+    <div class="create-dropdown-wrap hidden" id="createDropdownWrap">
+      <button class="btn btn-solid" id="createDropdownBtn">+ Create</button>
+      <div class="create-dropdown-menu hidden" id="createDropdownMenu">
+        <button class="dropdown-item" id="menuUploadVideo">Upload video</button>
+        <button class="dropdown-item" id="menuUploadReel">Upload reel</button>
+        <button class="dropdown-item" id="menuGoLive">Go live</button>
+        <button class="dropdown-item" id="menuCreatePost">Create post</button>
+      </div>
+    </div>
+    <button class="icon-btn" aria-label="Notifications">🔔</button>
+    <button class="avatar-btn" id="avatarBtn">I</button>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-item active" data-view="home"><span class="label">Home</span></div>
+    <div class="side-item" data-view="live"><span class="label">Live</span></div>
+    <div class="side-item" data-view="reels"><span class="label">Reels</span></div>
+    <div class="side-item" data-view="subs"><span class="label">Subscriptions</span></div>
+
+    <div class="side-divider"></div>
+    <div class="side-section-title">You</div>
+    <div class="side-item" data-view="history"><span class="label">History</span></div>
+    <div class="side-item" data-view="playlists"><span class="label">Playlists</span></div>
+    <div class="side-item" data-view="watchlater"><span class="label">Watch later</span></div>
+    <div class="side-item" data-view="saved"><span class="label">Saved</span></div>
+    <div class="side-item" data-view="liked"><span class="label">Liked videos</span></div>
+
+    <div class="side-divider"></div>
+    <div class="side-section-title">Explore</div>
+    <div class="side-item" data-jump="shelf-entertain"><span class="label">Entertain</span></div>
+    <div class="side-item" data-jump="shelf-sport"><span class="label">Sport</span></div>
+    <div class="side-item" data-jump="shelf-education"><span class="label">Education</span></div>
+    <div class="side-item" data-jump="shelf-business"><span class="label">Business</span></div>
+  </aside>
+
+  <div class="content">
+    <div class="pill-row" id="pillRow">
+      <button class="pill active" data-view="home">All</button>
+      <button class="pill live-pill" data-view="live">Live</button>
+      <button class="pill" data-view="reels">Reels</button>
+      <button class="pill" data-jump="shelf-entertain">Entertain</button>
+      <button class="pill" data-jump="shelf-sport">Sport</button>
+      <button class="pill" data-jump="shelf-education">Education</button>
+      <button class="pill" data-jump="shelf-business">Business</button>
+    </div>
+
+    <!-- ================= HOME VIEW ================= -->
+    <div class="view visible" id="view-home">
+      <section class="shelves" id="shelves"></section>
+    </div>
+
+    <!-- ================= LIVE VIEW ================= -->
+    <div class="view" id="view-live">
+      <section class="live-hero">
+        <div>
+          <div class="live-player"><span class="live-badge">LIVE</span><span class="live-viewers">1.2k watching</span></div>
+          <div class="live-info">
+            <h2>Glazing a full tea set — ask me anything</h2>
+            <div class="who"><div class="avatar" style="background:linear-gradient(135deg,#8a5a44,#c99a76)"></div><span>wetclaydiary · 6.4k subscribers</span></div>
+            <p class="desc">Streaming the whole glazing process from bisque to kiln, taking questions in chat as I go. First stream of the week — say hi.</p>
+          </div>
+        </div>
+        <div class="live-chat">
+          <h4>Live chat</h4>
+          <div class="chat-msg"><b>mara.sketches:</b> what glaze is that blue one?</div>
+          <div class="chat-msg"><b>offcutbuilds:</b> the handles came out so clean</div>
+          <div class="chat-msg"><b>quietbooth:</b> following for the kiln reveal</div>
+          <div class="chat-msg"><b>chalkandholds:</b> how long till it's kiln-ready?</div>
+        </div>
+      </section>
+      <section class="live-shelf-wrap">
+        <div class="shelf">
+          <div class="shelf-head">
+            <div><h3>Live now</h3><span class="count">4 streaming</span></div>
+            <div class="shelf-nav"><button aria-label="Scroll left">←</button><button aria-label="Scroll right">→</button></div>
+          </div>
+          <div class="track" id="liveTrack"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= REELS VIEW ================= -->
+    <div class="view" id="view-reels">
+      <button class="reel-arrow left" id="reelPrev" aria-label="Previous reel">←</button>
+      <button class="reel-arrow right" id="reelNext" aria-label="Next reel">→</button>
+      <div class="reels-container" id="reelsContainer"></div>
+    </div>
+
+    <!-- ================= SEARCH RESULTS ================= -->
+    <div class="view" id="view-search">
+      <div class="page-wrap">
+        <h2 id="searchHeading">Results</h2>
+        <p class="page-sub" id="searchSub"></p>
+        <div class="results-grid" id="searchResultsGrid"></div>
+      </div>
+    </div>
+
+    <!-- ================= HISTORY ================= -->
+    <div class="view" id="view-history">
+      <div class="page-wrap">
+        <h2>History</h2>
+        <p class="page-sub">Your recent searches and recently watched clips — kept for this session.</p>
+        <div class="side-section-title" style="margin-left:0;">Recent searches</div>
+        <div class="chip-row" id="historySearchList"></div>
+        <div class="side-section-title" style="margin-left:0;">Recently watched</div>
+        <div class="simple-list" id="historyWatchList"></div>
+      </div>
+    </div>
+
+    <!-- ================= LIKED VIDEOS ================= -->
+    <div class="view" id="view-liked">
+      <div class="page-wrap">
+        <h2>Liked videos</h2>
+        <p class="page-sub">Everything you've liked from the watch page.</p>
+        <div class="simple-list" id="likedList"></div>
+      </div>
+    </div>
+
+    <!-- ================= WATCH LATER ================= -->
+    <div class="view" id="view-watchlater">
+      <div class="page-wrap">
+        <h2>Watch later</h2>
+        <p class="page-sub">Saved from the watch page to come back to.</p>
+        <div class="simple-list" id="watchLaterList"></div>
+      </div>
+    </div>
+
+    <!-- ================= SUBSCRIPTIONS ================= -->
+    <div class="view" id="view-subs">
+      <div class="page-wrap">
+        <h2>Subscriptions</h2>
+        <p class="page-sub">Channels you've subscribed to from the watch page.</p>
+        <div id="subsList" style="max-width:520px;"></div>
+      </div>
+    </div>
+
+    <!-- ================= SAVED ================= -->
+    <div class="view" id="view-saved">
+      <div class="page-wrap">
+        <h2>Saved</h2>
+        <p class="page-sub">Videos you've saved to ISD from the Save button.</p>
+        <div class="simple-list" id="savedList"></div>
+      </div>
+    </div>
+
+    <!-- ================= CHANNEL / ABOUT ================= -->
+    <div class="view" id="view-channel">
+      <div class="page-wrap">
+        <span class="back-link" id="channelBack">← Back</span>
+        <div class="channel-header">
+          <div class="avatar-lg" id="channelPageAvatar" style="width:76px;height:76px;"></div>
+          <div>
+            <h2 id="channelPageName">Creator</h2>
+            <div class="channel-subs" id="channelPageSubs">0 subscribers · 0 videos</div>
+            <p class="channel-bio" id="channelPageBio"></p>
+          </div>
+          <button class="btn btn-solid subscribe-btn" id="channelSubscribeBtn">Subscribe</button>
+          <button class="btn btn-ghost" id="channelCommunityBtn">Community</button>
+        </div>
+        <div class="side-section-title" style="margin-left:0; margin-top:26px;">Videos</div>
+        <div class="results-grid" id="channelVideoGrid"></div>
+        <div id="channelPostsWrap" class="hidden">
+          <div class="side-section-title" style="margin-left:0; margin-top:26px;">Posts</div>
+          <div id="channelPostsList" class="simple-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PLAYLISTS ================= -->
+    <div class="view" id="view-playlists">
+      <div class="page-wrap">
+        <h2>Playlists</h2>
+        <p class="page-sub" id="playlistMsg">You haven't created any playlists yet.</p>
+        <button class="btn btn-ghost playlist-new" id="newPlaylistBtn">+ New playlist</button>
+      </div>
+    </div>
+
+    <!-- ================= WATCH PAGE ================= -->
+    <div class="view" id="view-watch">
+      <div class="watch-wrap">
+        <div class="watch-main">
+          <span class="back-link" id="watchBack">← Back to ISD</span>
+          <div class="watch-player"><div class="play-overlay">▶</div><div class="bar"></div></div>
+          <h2 class="watch-title" id="watchTitle">Throwing your first bowl on the wheel</h2>
+          <div class="watch-row">
+            <div class="channel-block" id="channelBlock">
+              <div class="avatar-lg" id="watchAvatar" style="background:linear-gradient(135deg,#8a5a44,#c99a76)"></div>
+              <div><div class="channel-name" id="channelName">wetclaydiary</div><div class="channel-subs" id="channelSubs">6.4K subscribers</div></div>
+              <button class="btn btn-solid subscribe-btn" id="subscribeBtn">Subscribe</button>
+            </div>
+            <div class="watch-actions">
+              <button class="pill-action" id="likeBtn">👍 <span id="likeCount">1.1K</span></button>
+              <button class="pill-action">👎</button>
+              <button class="pill-action" id="saveBtn">Save</button>
+              <button class="pill-action" id="shareBtn">Share</button>
+              <button class="pill-action" id="downloadBtn">Download</button>
+            </div>
+          </div>
+          <div class="watch-desc">
+            <span class="watch-meta" id="watchMeta">12,480 views · 2 weeks ago</span>
+            <p id="watchDescText">Full walkthrough of centering, opening, and pulling up your first bowl — plus the two mistakes almost everyone makes on their first try at the wheel.</p>
+          </div>
+          <div class="comments">
+            <h4 id="commentCount">182 Comments</h4>
+            <div class="add-comment"><div class="avatar" style="background:var(--teal)"></div><input placeholder="Add a comment..."></div>
+            <div class="comment">
+              <div class="avatar" style="background:linear-gradient(135deg,#33685c,#7fae9f)"></div>
+              <div class="comment-body">
+                <span class="cu">line.lab</span><span class="ct">3 days ago</span>
+                <p>The bit about keeping your elbows braced fixed my wobble instantly.</p>
+                <div class="comment-actions"><span>👍 42</span><span>Reply</span></div>
+              </div>
+            </div>
+            <div class="comment">
+              <div class="avatar" style="background:linear-gradient(135deg,#e2a63a,#f4dfb0)"></div>
+              <div class="comment-body">
+                <span class="cu">spokewise</span><span class="ct">1 week ago</span>
+                <p>Didn't expect a pottery video to get me this hyped, but here we are.</p>
+                <div class="comment-actions"><span>👍 18</span><span>Reply</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="watch-side" id="watchSide"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span></span>
+  <span class="mono">© 2026</span>
+</footer>
+
+<script>
+const gradients = [
+  'linear-gradient(135deg,#33685c,#7fae9f)',
+  'linear-gradient(135deg,#e2a63a,#f4dfb0)',
+  'linear-gradient(135deg,#8a5a44,#c99a76)',
+  'linear-gradient(135deg,#4a5a6b,#93a6b6)',
+  'linear-gradient(135deg,#234a41,#33685c)',
+  'linear-gradient(135deg,#c99a76,#8a5a44)'
+];
+
+/* ---------- sidebar toggle + responsive init ---------- */
+const sidebar = document.getElementById('sidebar');
+const backdrop = document.getElementById('sidebarBackdrop');
+function isMobile(){ return window.innerWidth <= 920; }
+function syncBackdrop(){ backdrop.classList.toggle('show', isMobile() && !sidebar.classList.contains('collapsed')); }
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
+  syncBackdrop();
+});
+backdrop.addEventListener('click', () => { sidebar.classList.add('collapsed'); syncBackdrop(); });
+window.addEventListener('load', () => { if(isMobile()) sidebar.classList.add('collapsed'); syncBackdrop(); });
+window.addEventListener('resize', () => { syncBackdrop(); });
+
+/* ---------- logo -> home ---------- */
+document.getElementById('logoHome').addEventListener('click', goHome);
+document.getElementById('watchBack').addEventListener('click', goHome);
+function goHome(){
+  setView('home');
+  document.getElementById('authModal').classList.add('hidden');
+  document.getElementById('createModal').classList.add('hidden');
+  const si = document.getElementById('searchInput');
+  if(si) si.value = '';
+  window.scrollTo({top:0, behavior:'smooth'});
+  if(isMobile()){ sidebar.classList.add('collapsed'); syncBackdrop(); }
+}
+
+/* ---------- auth modal ---------- */
+const authModal = document.getElementById('authModal');
+const createModal = document.getElementById('createModal');
+document.getElementById('googleBtn').addEventListener('click', () => authModal.classList.add('hidden'));
+document.getElementById('guestBtn').addEventListener('click', () => authModal.classList.add('hidden'));
+document.getElementById('gotoSignup').addEventListener('click', () => {
+  authModal.classList.add('hidden');
+  createModal.classList.remove('hidden');
+});
+document.getElementById('createAccountBtn').addEventListener('click', () => createModal.classList.remove('hidden'));
+document.getElementById('avatarBtn').addEventListener('click', () => {
+  if(state.currentUser){
+    renderChannel(state.currentUser.uname || state.currentUser.email);
+    setView('channel');
+    window.scrollTo({top:0, behavior:'smooth'});
+  } else {
+    createModal.classList.remove('hidden');
+  }
+});
+document.getElementById('closeCreateModal').addEventListener('click', () => createModal.classList.add('hidden'));
+createModal.addEventListener('click', (e) => { if(e.target === createModal) createModal.classList.add('hidden'); });
+
+/* ---------- share modal ---------- */
+const shareModal = document.getElementById('shareModal');
+document.getElementById('shareBtn').addEventListener('click', () => {
+  document.getElementById('shareSub').textContent = `"${currentVideo.title}" — pick where to send it.`;
+  document.getElementById('shareNote').textContent = '';
+  shareModal.classList.remove('hidden');
+});
+document.getElementById('closeShareModal').addEventListener('click', () => shareModal.classList.add('hidden'));
+shareModal.addEventListener('click', (e) => { if(e.target === shareModal) shareModal.classList.add('hidden'); });
+shareModal.querySelectorAll('[data-platform]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const shareUrl = `https://isd.app/watch?v=${encodeURIComponent(currentVideo.title)}`;
+    const text = `${currentVideo.title} — on ISD`;
+    const platform = btn.dataset.platform;
+    const note = document.getElementById('shareNote');
+    if(platform === 'whatsapp'){
+      window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`, '_blank');
+    } else if(platform === 'telegram'){
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`, '_blank');
+    } else {
+      if(navigator.clipboard){ navigator.clipboard.writeText(shareUrl).catch(() => {}); }
+      note.textContent = `${platform === 'instagram' ? 'Instagram' : 'TikTok'} doesn't accept links from other sites directly — link copied, paste it into your story or bio.`;
+    }
+  });
+});
+
+/* ---------- download modal ---------- */
+const downloadModal = document.getElementById('downloadModal');
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  document.getElementById('downloadSub').textContent = `Choose a format for "${currentVideo.title}".`;
+  downloadModal.classList.remove('hidden');
+});
+document.getElementById('closeDownloadModal').addEventListener('click', () => downloadModal.classList.add('hidden'));
+downloadModal.addEventListener('click', (e) => { if(e.target === downloadModal) downloadModal.classList.add('hidden'); });
+downloadModal.querySelectorAll('[data-format]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const fmt = btn.dataset.format;
+    const ext = fmt === 'mp3' ? 'mp3' : 'mp4';
+    const safeName = currentVideo.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    const placeholderText = `This is a placeholder file standing in for:\n"${currentVideo.title}" by ${currentVideo.who}\nFormat requested: ${fmt}\n\nISD is a school project demo — there's no real video/audio behind this download yet.`;
+    const blob = new Blob([placeholderText], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${safeName}.${ext}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    downloadModal.classList.add('hidden');
+  });
+});
+
+/* ---------- create dropdown (upload video / reel / go live / post) ---------- */
+const createDropdownBtn = document.getElementById('createDropdownBtn');
+const createDropdownMenu = document.getElementById('createDropdownMenu');
+createDropdownBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  createDropdownMenu.classList.toggle('hidden');
+});
+document.addEventListener('click', (e) => {
+  if(!createDropdownMenu.classList.contains('hidden') && !e.target.closest('.create-dropdown-wrap')){
+    createDropdownMenu.classList.add('hidden');
+  }
+});
+
+function openUploadModal(id){
+  createDropdownMenu.classList.add('hidden');
+  document.getElementById(id).classList.remove('hidden');
+}
+document.getElementById('menuUploadVideo').addEventListener('click', () => openUploadModal('uploadVideoModal'));
+document.getElementById('menuUploadReel').addEventListener('click', () => openUploadModal('uploadReelModal'));
+document.getElementById('menuGoLive').addEventListener('click', () => openUploadModal('goLiveModal'));
+document.getElementById('menuCreatePost').addEventListener('click', () => openUploadModal('createPostModal'));
+
+[['uploadVideoModal','closeUploadVideoModal'], ['uploadReelModal','closeUploadReelModal'], ['goLiveModal','closeGoLiveModal'], ['createPostModal','closeCreatePostModal']].forEach(([modalId, closeId]) => {
+  const modal = document.getElementById(modalId);
+  document.getElementById(closeId).addEventListener('click', () => modal.classList.add('hidden'));
+  modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
+});
+
+function addUploadedVideo(shelfId, title, who, dur){
+  const track = document.querySelector('#' + shelfId + ' .track');
+  const shelfEntry = shelfData.find(s => s.id === shelfId);
+  if(!shelfEntry || !track) return;
+  shelfEntry.items.push([title, who, dur]);
+  const i = shelfEntry.items.length - 1;
+  const si = shelfData.indexOf(shelfEntry);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="thumb" style="background:${gradients[(si+i)%gradients.length]}"><span class="dur">${dur}</span></div>
+    <div class="card-title">${title}</div>
+    <div class="card-meta"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div><span class="who">${who}</span></div>
+    <div class="card-stats">0.1k views · new upload</div>`;
+  card.addEventListener('click', () => openWatch(title, who));
+  track.appendChild(card);
+  allVideos.push({ title, who, dur, kind:'video', action: () => openWatch(title, who) });
+  const countEl = document.querySelector('#' + shelfId + ' .count');
+  if(countEl) countEl.textContent = shelfEntry.items.length + ' clips';
+}
+
+document.getElementById('uvSubmit').addEventListener('click', () => {
+  const title = document.getElementById('uvTitle').value.trim();
+  const shelfId = document.getElementById('uvCategory').value;
+  const dur = document.getElementById('uvDuration').value.trim() || '0:00';
+  const msg = document.getElementById('uvMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
+  if(!title){ msg.textContent = 'Give your video a title first.'; return; }
+  addUploadedVideo(shelfId, title, state.currentUser.uname || state.currentUser.email, dur);
+  msg.textContent = `"${title}" is live in your feed.`;
+  document.getElementById('uvTitle').value = '';
+  document.getElementById('uvDuration').value = '';
+  setTimeout(() => {
+    document.getElementById('uploadVideoModal').classList.add('hidden');
+    msg.textContent = '';
+    setView('home');
+    document.getElementById(shelfId).scrollIntoView({behavior:'smooth', block:'start'});
+  }, 1000);
+});
+
+document.getElementById('urSubmit').addEventListener('click', () => {
+  const cap = document.getElementById('urCaption').value.trim();
+  const msg = document.getElementById('urMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
+  if(!cap){ msg.textContent = 'Add a caption for your reel first.'; return; }
+  const who = state.currentUser.uname || state.currentUser.email;
+  const title = cap.length > 40 ? cap.slice(0,40) + '…' : cap;
+  const i = reelData.length;
+  reelData.push([title, who, cap]);
+  const slide = document.createElement('div');
+  slide.className = 'reel-slide';
+  slide.innerHTML = `
+    <div class="reel-frame" style="background:${gradients[i%gradients.length]}">
+      <div class="reel-topbar">REEL ${i+1} / ${reelData.length}</div>
+      <div class="reel-bottom">
+        <div class="who"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div>${who}</div>
+        <div class="cap">${cap}</div>
+      </div>
+      <div class="reel-actions">
+        <div><button aria-label="Like">👍</button><div class="ct">0</div></div>
+        <div><button aria-label="Comment">💬</button><div class="ct">0</div></div>
+        <div><button aria-label="Share">↗</button></div>
+      </div>
+    </div>`;
+  reelsContainer.appendChild(slide);
+  allVideos.push({ title, who, kind:'reel', action: () => setView('reels') });
+  msg.textContent = 'Your reel is live.';
+  document.getElementById('urCaption').value = '';
+  setTimeout(() => {
+    document.getElementById('uploadReelModal').classList.add('hidden');
+    msg.textContent = '';
+    setView('reels');
+  }, 1000);
+});
+
+document.getElementById('glSubmit').addEventListener('click', () => {
+  const title = document.getElementById('glTitle').value.trim();
+  const msg = document.getElementById('glMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to go live.'; return; }
+  if(!title){ msg.textContent = 'Give your stream a title first.'; return; }
+  const who = state.currentUser.uname || state.currentUser.email;
+  const i = liveItems.length;
+  liveItems.push([title, who, '1']);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="thumb" style="background:${gradients[i%gradients.length]}"><span class="live-tag">LIVE</span></div>
+    <div class="card-title">${title}</div>
+    <div class="card-meta"><div class="avatar" style="background:${gradients[(i+3)%gradients.length]}"></div><span class="who">${who}</span></div>
+    <div class="card-stats">1 watching now</div>`;
+  card.addEventListener('click', () => setView('live'));
+  liveTrack.appendChild(card);
+  allVideos.push({ title, who, kind:'live', watching:'1', action: () => setView('live') });
+  msg.textContent = 'You are live!';
+  document.getElementById('glTitle').value = '';
+  setTimeout(() => {
+    document.getElementById('goLiveModal').classList.add('hidden');
+    msg.textContent = '';
+    setView('live');
+  }, 1000);
+});
+
+document.getElementById('cpSubmit').addEventListener('click', () => {
+  const text = document.getElementById('cpText').value.trim();
+  const msg = document.getElementById('cpMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to post.'; return; }
+  if(!text){ msg.textContent = 'Write something to post first.'; return; }
+  state.myPosts.unshift({ text, time: 'Just now' });
+  msg.textContent = 'Posted to your channel.';
+  document.getElementById('cpText').value = '';
+  setTimeout(() => {
+    document.getElementById('createPostModal').classList.add('hidden');
+    msg.textContent = '';
+  }, 1000);
+});
+
+/* ---------- password show/hide ---------- */
+document.querySelectorAll('.pw-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Show' : 'Hide';
+  });
+});
+
+/* ---------- purpose chips + submit ---------- */
+const chips = document.querySelectorAll('.purpose-chip');
+chips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    chips.forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    document.getElementById('submitMsg').textContent = `Focus set to ${chip.dataset.purpose}. This shapes your first shelf.`;
+  });
+});
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const selected = document.querySelector('.purpose-chip.selected');
+  const email = document.getElementById('email').value.trim();
+  const uname = document.getElementById('uname').value.trim();
+  const pw = document.getElementById('pw').value;
+  const pw2 = document.getElementById('pw2').value;
+  const msg = document.getElementById('submitMsg');
+  if(!email){ msg.textContent = "Add an email to create your account."; return; }
+  if(!selected){ msg.textContent = "Choose a focus above first."; return; }
+  if(pw.length < 8){ msg.textContent = "Your password needs to be at least 8 characters."; return; }
+  if(pw !== pw2){ msg.textContent = "Those passwords don't match — try again."; return; }
+  const account = { email, uname, purpose: selected.dataset.purpose };
+  state.accounts.push(account);
+  state.currentUser = account;
+  msg.textContent = `Account created for ${email} — welcome to your ${selected.dataset.purpose} shelf.`;
+  document.getElementById('createAccountBtn').classList.add('hidden');
+  document.getElementById('createDropdownWrap').classList.remove('hidden');
+  document.getElementById('avatarBtn').textContent = uname ? uname.trim().charAt(0).toUpperCase() : 'I';
+  setTimeout(() => { document.getElementById('createModal').classList.add('hidden'); }, 1400);
+});
+
+/* ---------- view switching ---------- */
+function setView(view){
+  if(view !== 'search') lastNonSearchView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
+  document.getElementById('view-' + view).classList.add('visible');
+  document.querySelectorAll('[data-view]').forEach(el => el.classList.toggle('active', el.dataset.view === view));
+}
+document.querySelectorAll('[data-view]').forEach(el => {
+  el.addEventListener('click', () => {
+    if(viewRenderers[el.dataset.view]) viewRenderers[el.dataset.view]();
+    setView(el.dataset.view);
+    if(isMobile()){ sidebar.classList.add('collapsed'); syncBackdrop(); }
+  });
+});
+document.querySelectorAll('[data-jump]').forEach(el => {
+  el.addEventListener('click', () => {
+    setView('home');
+    if(isMobile()){ sidebar.classList.add('collapsed'); syncBackdrop(); }
+    setTimeout(() => {
+      const target = document.getElementById(el.dataset.jump);
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 60);
+  });
+});
+
+/* ---------- shared app state ----------
+   Kept in memory for this session. Structured so it maps cleanly onto
+   real DB tables later: users/accounts, searches, videos, likes,
+   watch_later, subscriptions. Nothing here survives a page reload —
+   that needs a real backend + database. */
+const state = {
+  searchHistory: [],
+  watchHistory: [],
+  likedVideos: new Set(),
+  watchLater: new Set(),
+  subscriptions: new Set(),
+  accounts: [],
+  currentUser: null,
+  myPosts: [],
+};
+const allVideos = [];
+let lastNonSearchView = 'home';
+let currentVideo = { title:'', who:'' };
+
+function hashStr(s){ let h = 0; for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; } return h; }
+function channelSubsText(who){ const h = hashStr(who); return `${(h % 120) + 5}.${Math.floor(h/7)%10}K subscribers`; }
+function viewsMetaText(title){
+  const h = hashStr(title);
+  const v = 800 + (h % 45000);
+  const w = (h % 10) + 1;
+  return `${v.toLocaleString()} views · ${w} week${w>1?'s':''} ago`;
+}
+function likeCountText(title){ const h = hashStr(title + 'like'); return `${(h % 30) + 1}.${Math.floor(h/13)%10}K`; }
+function videoKey(title, who){ return title + '|' + who; }
+
+function openWatch(title, who){
+  title = title || document.getElementById('watchTitle').textContent;
+  who = who || document.getElementById('channelName').textContent;
+  currentVideo = { title, who };
+  document.getElementById('watchTitle').textContent = title;
+  document.getElementById('channelName').textContent = who;
+  document.getElementById('channelSubs').textContent = channelSubsText(who);
+  document.getElementById('watchMeta').textContent = viewsMetaText(title);
+  document.getElementById('watchDescText').textContent = `Full walkthrough and behind-the-scenes look at "${title}" from ${who}.`;
+  document.getElementById('watchAvatar').style.background = gradients[hashStr(who) % gradients.length];
+
+  const key = videoKey(title, who);
+  const likeBtn = document.getElementById('likeBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const subBtn = document.getElementById('subscribeBtn');
+
+  likeBtn.classList.toggle('active', state.likedVideos.has(key));
+  document.getElementById('likeCount').textContent = likeCountText(title);
+  saveBtn.textContent = state.watchLater.has(key) ? 'Saved' : 'Save';
+  saveBtn.classList.toggle('active', state.watchLater.has(key));
+  const subscribed = state.subscriptions.has(who);
+  subBtn.textContent = subscribed ? 'Subscribed' : 'Subscribe';
+  subBtn.classList.toggle('subscribed', subscribed);
+
+  likeBtn.onclick = () => {
+    state.likedVideos.has(key) ? state.likedVideos.delete(key) : state.likedVideos.add(key);
+    likeBtn.classList.toggle('active', state.likedVideos.has(key));
+  };
+  saveBtn.onclick = () => {
+    if(state.watchLater.has(key)){ state.watchLater.delete(key); saveBtn.textContent = 'Save'; saveBtn.classList.remove('active'); }
+    else { state.watchLater.add(key); saveBtn.textContent = 'Saved'; saveBtn.classList.add('active'); }
+  };
+  subBtn.onclick = () => {
+    if(state.subscriptions.has(who)){ state.subscriptions.delete(who); subBtn.textContent = 'Subscribe'; subBtn.classList.remove('subscribed'); }
+    else { state.subscriptions.add(who); subBtn.textContent = 'Subscribed'; subBtn.classList.add('subscribed'); }
+  };
+
+  state.watchHistory = state.watchHistory.filter(w => videoKey(w.title, w.who) !== key);
+  state.watchHistory.unshift({title, who});
+  if(state.watchHistory.length > 25) state.watchHistory.length = 25;
+
+  setView('watch');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ---------- shelves ---------- */
+const shelfData = [
+  { id:"shelf-entertain", title: "Entertain", items: [
+    ["My clay creations vs. my expectations", "wetclaydiary", "4:18"],
+    ["Every runner's first 5k, ranked", "runwithtomi", "3:02"],
+    ["Guitar practice but it's 2am", "fret.notes", "2:41"],
+    ["Sketchbook fails compilation", "kito.draws", "5:37"],
+    ["Things climbers say vs. mean", "chalkandholds", "3:55"],
+    ["My woodworking measurements, a tragedy", "shaveandfit", "4:04"],
+  ]},
+  { id:"shelf-sport", title: "Sport & Movement", items: [
+    ["Fixing your 5k pacing", "runwithtomi", "9:02"],
+    ["Footwork drills for beginners", "courtcraft", "4:33"],
+    ["Home mobility routine, 15 min", "moveslow", "15:00"],
+    ["Climbing your first V3", "chalkandholds", "7:48"],
+    ["Bike setup for long rides", "spokewise", "10:21"],
+    ["Post-game recovery basics", "trainquiet", "6:10"],
+  ]},
+  { id:"shelf-education", title: "Education", items: [
+    ["Ear training for absolute beginners", "pitchwalk", "9:19"],
+    ["Building a comic panel layout, step by step", "line.lab", "6:27"],
+    ["Ink wash basics for beginners", "penandpetal", "11:05"],
+    ["Soldering basics for small repairs", "benchwork", "6:35"],
+    ["How centering clay actually works", "wetclaydiary", "10:09"],
+    ["Reading a training plan without guessing", "trainquiet", "8:40"],
+  ]},
+  { id:"shelf-business", title: "Business", items: [
+    ["Pricing your first commissions", "graphite.jo", "9:47"],
+    ["Turning a hobby channel into income", "renderloop", "12:02"],
+    ["Simple invoicing for freelance creators", "benchwork", "7:15"],
+    ["Booking your first paid gig", "hum.and.hook", "6:33"],
+    ["What I charge for coaching sessions", "courtcraft", "8:58"],
+    ["Basic budgeting for a small workshop", "slowdye", "10:14"],
+  ]},
+];
+const shelvesEl = document.getElementById('shelves');
+shelfData.forEach((shelf, si) => {
+  const section = document.createElement('div');
+  section.className = 'shelf'; section.id = shelf.id;
+  const head = document.createElement('div');
+  head.className = 'shelf-head';
+  head.innerHTML = `<div><h3>${shelf.title}</h3><span class="count">${shelf.items.length} clips</span></div>
+    <div class="shelf-nav"><button aria-label="Scroll left">←</button><button aria-label="Scroll right">→</button></div>`;
+  const track = document.createElement('div');
+  track.className = 'track';
+  shelf.items.forEach((item, i) => {
+    const [title, who, dur] = item;
+    const views = (Math.random()*180+2).toFixed(1);
+    const subs = Math.floor(Math.random()*40+1);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="thumb" style="background:${gradients[(si+i)%gradients.length]}"><span class="dur">${dur}</span></div>
+      <div class="card-title">${title}</div>
+      <div class="card-meta"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div><span class="who">${who}</span></div>
+      <div class="card-stats">${views}k views · ${subs}k subscribers</div>`;
+    card.addEventListener('click', () => openWatch(title, who));
+    track.appendChild(card);
+    allVideos.push({ title, who, dur, kind:'video', action: () => openWatch(title, who) });
+  });
+  section.appendChild(head); section.appendChild(track); shelvesEl.appendChild(section);
+  const [leftBtn, rightBtn] = head.querySelectorAll('.shelf-nav button');
+  leftBtn.addEventListener('click', () => track.scrollBy({left:-500, behavior:'smooth'}));
+  rightBtn.addEventListener('click', () => track.scrollBy({left:500, behavior:'smooth'}));
+});
+
+/* ---------- live shelf ---------- */
+const liveItems = [
+  ["Glazing a full tea set — AMA", "wetclaydiary", "1.2k"],
+  ["Morning trail run, live route", "runwithtomi", "410"],
+  ["Late-night sketch session", "kito.draws", "780"],
+  ["Learning a new riff live", "fret.notes", "295"],
+];
+const liveTrack = document.getElementById('liveTrack');
+liveItems.forEach((item, i) => {
+  const [title, who, watching] = item;
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="thumb" style="background:${gradients[i%gradients.length]}"><span class="live-tag">LIVE</span></div>
+    <div class="card-title">${title}</div>
+    <div class="card-meta"><div class="avatar" style="background:${gradients[(i+3)%gradients.length]}"></div><span class="who">${who}</span></div>
+    <div class="card-stats">${watching} watching now</div>`;
+  card.addEventListener('click', () => setView('live'));
+  liveTrack.appendChild(card);
+  allVideos.push({ title, who, kind:'live', watching, action: () => setView('live') });
+});
+const liveArrows = document.querySelectorAll('.live-shelf-wrap .shelf-nav button');
+if(liveArrows.length === 2){
+  liveArrows[0].addEventListener('click', () => liveTrack.scrollBy({left:-500, behavior:'smooth'}));
+  liveArrows[1].addEventListener('click', () => liveTrack.scrollBy({left:500, behavior:'smooth'}));
+}
+
+/* ---------- reels ---------- */
+const reelData = [
+  ["Quick trick: loose gesture lines", "kito.draws", "Two minutes of warm-up gestures before any real drawing session."],
+  ["30-second grip fix", "courtcraft", "The one grip tweak that stopped my wrist pain."],
+  ["Tiny riff, big mood", "fret.notes", "Four notes, looped, and suddenly it's a song."],
+  ["Trimming a bowl in 40 seconds", "wetclaydiary", "Sped-up trim pass on this morning's mug."],
+  ["One-breath vocal warm-up", "quietbooth", "Do this before every recording session."],
+  ["Fastest way to true a wheel", "spokewise", "Bike wheel truing, condensed to the essentials."],
+];
+const reelsContainer = document.getElementById('reelsContainer');
+reelData.forEach((item, i) => {
+  const [title, who, cap] = item;
+  const slide = document.createElement('div');
+  slide.className = 'reel-slide';
+  slide.innerHTML = `
+    <div class="reel-frame" style="background:${gradients[i%gradients.length]}">
+      <div class="reel-topbar">REEL ${i+1} / ${reelData.length}</div>
+      <div class="reel-bottom">
+        <div class="who"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div>${who}</div>
+        <div class="cap">${cap}</div>
+      </div>
+      <div class="reel-actions">
+        <div><button aria-label="Like">👍</button><div class="ct">${(Math.random()*9+1).toFixed(1)}k</div></div>
+        <div><button aria-label="Comment">💬</button><div class="ct">${Math.floor(Math.random()*300+20)}</div></div>
+        <div><button aria-label="Share">↗</button></div>
+      </div>
+    </div>`;
+  reelsContainer.appendChild(slide);
+  allVideos.push({ title, who, kind:'reel', action: () => setView('reels') });
+});
+document.getElementById('reelPrev').addEventListener('click', () => reelsContainer.scrollBy({left:-reelsContainer.clientWidth, behavior:'smooth'}));
+document.getElementById('reelNext').addEventListener('click', () => reelsContainer.scrollBy({left:reelsContainer.clientWidth, behavior:'smooth'}));
+
+/* ---------- related videos (watch page) ---------- */
+const relatedItems = [
+  ["Coldplay-style chord voicings for beginners", "fret.notes"],
+  ["Wheel-throwing a set of matching mugs", "wetclaydiary"],
+  ["Drawing hands without the fear", "mara.sketches"],
+  ["5k splits explained in plain language", "runwithtomi"],
+  ["Dovetail joints for absolute beginners", "shaveandfit"],
+  ["Home studio acoustics on a budget", "roomtone"],
+];
+const watchSide = document.getElementById('watchSide');
+relatedItems.forEach((item, i) => {
+  const [title, who] = item;
+  const el = document.createElement('div');
+  el.className = 'rel-card';
+  el.innerHTML = `
+    <div class="rel-thumb" style="background:${gradients[i%gradients.length]}"></div>
+    <div><div class="rel-title">${title}</div><div class="rel-meta">${who}</div><div class="rel-meta">${viewsMetaText(title)}</div></div>`;
+  el.addEventListener('click', () => openWatch(title, who));
+  watchSide.appendChild(el);
+  allVideos.push({ title, who, kind:'video', action: () => openWatch(title, who) });
+});
+
+/* ---------- search: live filter + history ---------- */
+const searchInput = document.getElementById('searchInput');
+const searchSuggest = document.getElementById('searchSuggest');
+const searchResultsGrid = document.getElementById('searchResultsGrid');
+const searchHeading = document.getElementById('searchHeading');
+const searchSub = document.getElementById('searchSub');
+
+function buildResultCard(v){
+  const card = document.createElement('div');
+  card.className = 'card';
+  const stat = v.kind === 'live' ? `${v.watching || ''} watching now`.trim() : v.kind === 'reel' ? 'Reel · tap to open' : `${(hashStr(v.title)%180+2)}k views`;
+  const badge = v.kind === 'live' ? `<span class="live-tag">LIVE</span>` : (v.dur ? `<span class="dur">${v.dur}</span>` : '');
+  card.innerHTML = `
+    <div class="thumb" style="background:${gradients[hashStr(v.title) % gradients.length]}">${badge}</div>
+    <div class="card-title">${v.title}</div>
+    <div class="card-meta"><div class="avatar" style="background:${gradients[hashStr(v.who) % gradients.length]}"></div><span class="who">${v.who}</span></div>
+    <div class="card-stats">${stat}</div>`;
+  card.addEventListener('click', v.action);
+  return card;
+}
+function runSearch(query){
+  const q = query.trim().toLowerCase();
+  if(!q){ setView(lastNonSearchView); return; }
+  const matches = allVideos.filter(v => v.title.toLowerCase().includes(q) || v.who.toLowerCase().includes(q));
+  searchHeading.textContent = `Results for "${query.trim()}"`;
+  searchSub.textContent = matches.length ? `${matches.length} match${matches.length>1?'es':''} found.` : `No matches — try a different word.`;
+  searchResultsGrid.innerHTML = '';
+  if(!matches.length){
+    searchResultsGrid.innerHTML = `<div class="empty-state" style="width:100%">Nothing found for "${query.trim()}". Try a creator name or a word from a title.</div>`;
+  } else {
+    matches.forEach(v => searchResultsGrid.appendChild(buildResultCard(v)));
+  }
+  setView('search');
+}
+function commitSearchHistory(q){
+  state.searchHistory = state.searchHistory.filter(x => x.toLowerCase() !== q.toLowerCase());
+  state.searchHistory.unshift(q);
+  if(state.searchHistory.length > 15) state.searchHistory.length = 15;
+}
+function showSuggest(){
+  if(!state.searchHistory.length) return;
+  searchSuggest.innerHTML = `<div class="sugg-label">Recent searches</div>` +
+    state.searchHistory.map(q => `<div class="sugg-item" data-q="${q}"><span>🕘 ${q}</span></div>`).join('');
+  searchSuggest.querySelectorAll('.sugg-item').forEach(el => {
+    el.addEventListener('click', () => {
+      searchInput.value = el.dataset.q;
+      commitSearchHistory(el.dataset.q);
+      runSearch(el.dataset.q);
+      hideSuggest();
+    });
+  });
+  searchSuggest.classList.add('show');
+}
+function hideSuggest(){ searchSuggest.classList.remove('show'); }
+
+searchInput.addEventListener('input', () => {
+  const val = searchInput.value;
+  hideSuggest();
+  if(val.trim()){ runSearch(val); } else { setView(lastNonSearchView); }
+});
+searchInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    const val = searchInput.value.trim();
+    if(val){ commitSearchHistory(val); runSearch(val); }
+    hideSuggest();
+    searchInput.blur();
+  }
+});
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const val = searchInput.value.trim();
+  if(val){ commitSearchHistory(val); runSearch(val); }
+});
+searchInput.addEventListener('focus', () => { if(!searchInput.value.trim()) showSuggest(); });
+document.addEventListener('click', (e) => { if(!e.target.closest('.search-bar-outer')) hideSuggest(); });
+
+/* ---------- You-section pages ---------- */
+function simpleVideoRow(title, who){
+  const el = document.createElement('div');
+  el.className = 'rel-card';
+  el.innerHTML = `<div class="rel-thumb" style="background:${gradients[hashStr(title)%gradients.length]}"></div>
+    <div><div class="rel-title">${title}</div><div class="rel-meta">${who}</div></div>`;
+  el.addEventListener('click', () => openWatch(title, who));
+  return el;
+}
+function renderHistory(){
+  const searchWrap = document.getElementById('historySearchList');
+  searchWrap.innerHTML = '';
+  if(!state.searchHistory.length){
+    searchWrap.innerHTML = `<div class="empty-state" style="width:100%">No searches yet — try the search bar above.</div>`;
+  } else {
+    state.searchHistory.forEach(q => {
+      const chip = document.createElement('div');
+      chip.className = 'hist-chip';
+      chip.innerHTML = `<span>${q}</span><span class="x">✕</span>`;
+      chip.querySelector('span:last-child').addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.searchHistory = state.searchHistory.filter(x => x !== q);
+        renderHistory();
+      });
+      chip.addEventListener('click', () => { searchInput.value = q; runSearch(q); });
+      searchWrap.appendChild(chip);
+    });
+  }
+  const watchWrap = document.getElementById('historyWatchList');
+  watchWrap.innerHTML = '';
+  if(!state.watchHistory.length){
+    watchWrap.innerHTML = `<div class="empty-state">Nothing watched yet this session.</div>`;
+  } else {
+    state.watchHistory.forEach(w => watchWrap.appendChild(simpleVideoRow(w.title, w.who)));
+  }
+}
+function renderLiked(){
+  const wrap = document.getElementById('likedList');
+  wrap.innerHTML = '';
+  if(!state.likedVideos.size){ wrap.innerHTML = `<div class="empty-state">You haven't liked any videos yet.</div>`; return; }
+  [...state.likedVideos].forEach(key => { const [title, who] = key.split('|'); wrap.appendChild(simpleVideoRow(title, who)); });
+}
+function renderWatchLater(){
+  const wrap = document.getElementById('watchLaterList');
+  wrap.innerHTML = '';
+  if(!state.watchLater.size){ wrap.innerHTML = `<div class="empty-state">Nothing saved for later yet.</div>`; return; }
+  [...state.watchLater].forEach(key => { const [title, who] = key.split('|'); wrap.appendChild(simpleVideoRow(title, who)); });
+}
+function renderSubs(){
+  const wrap = document.getElementById('subsList');
+  wrap.innerHTML = '';
+  if(!state.subscriptions.size){ wrap.innerHTML = `<div class="empty-state">You're not subscribed to any channels yet.</div>`; return; }
+  [...state.subscriptions].forEach(who => {
+    const el = document.createElement('div');
+    el.className = 'subs-row';
+    el.innerHTML = `<div class="avatar-lg" style="background:${gradients[hashStr(who)%gradients.length]}"></div>
+      <div><div class="channel-name">${who}</div><div class="channel-subs">${channelSubsText(who)}</div></div>`;
+    wrap.appendChild(el);
+  });
+}
+function renderPlaylists(){
+  document.getElementById('playlistMsg').textContent = "You haven't created any playlists yet.";
+}
+document.getElementById('newPlaylistBtn').addEventListener('click', () => {
+  document.getElementById('playlistMsg').textContent = "Playlist creation isn't wired up in this demo — the button's ready for it though.";
+});
+function renderSaved(){
+  const wrap = document.getElementById('savedList');
+  wrap.innerHTML = '';
+  if(!state.watchLater.size){ wrap.innerHTML = `<div class="empty-state">Nothing saved yet — tap Save on any video.</div>`; return; }
+  [...state.watchLater].forEach(key => { const [title, who] = key.split('|'); wrap.appendChild(simpleVideoRow(title, who)); });
+}
+const viewRenderers = { history: renderHistory, liked: renderLiked, watchlater: renderWatchLater, subs: renderSubs, playlists: renderPlaylists, saved: renderSaved };
+
+/* ---------- channel / about page ---------- */
+function renderChannel(who){
+  document.getElementById('channelPageAvatar').style.background = gradients[hashStr(who) % gradients.length];
+  document.getElementById('channelPageName').textContent = who;
+  const isSelf = !!(state.currentUser && (state.currentUser.uname === who || state.currentUser.email === who));
+  const vids = allVideos.filter(v => v.who === who && v.kind !== 'live');
+  document.getElementById('channelPageSubs').textContent = `${channelSubsText(who)} · ${vids.length} video${vids.length === 1 ? '' : 's'}`;
+  document.getElementById('channelPageBio').textContent = isSelf && state.currentUser.purpose
+    ? `Sharing ${state.currentUser.purpose} content as ${who} on ISD.`
+    : `Sharing hobby videos as ${who} on ISD.`;
+  const subBtn = document.getElementById('channelSubscribeBtn');
+  const syncSubBtn = () => {
+    const subscribed = state.subscriptions.has(who);
+    subBtn.textContent = subscribed ? 'Subscribed' : 'Subscribe';
+    subBtn.classList.toggle('subscribed', subscribed);
+  };
+  syncSubBtn();
+  subBtn.onclick = () => {
+    state.subscriptions.has(who) ? state.subscriptions.delete(who) : state.subscriptions.add(who);
+    syncSubBtn();
+    if(currentVideo.who === who){
+      const mainSub = document.getElementById('subscribeBtn');
+      mainSub.textContent = subBtn.textContent;
+      mainSub.classList.toggle('subscribed', state.subscriptions.has(who));
+    }
+  };
+  const grid = document.getElementById('channelVideoGrid');
+  grid.innerHTML = '';
+  if(!vids.length){
+    grid.innerHTML = `<div class="empty-state" style="width:100%">No videos from ${who} yet.</div>`;
+  } else {
+    vids.forEach(v => grid.appendChild(buildResultCard(v)));
+  }
+  const postsWrap = document.getElementById('channelPostsWrap');
+  const postsList = document.getElementById('channelPostsList');
+  if(isSelf && state.myPosts.length){
+    postsWrap.classList.remove('hidden');
+    postsList.innerHTML = '';
+    state.myPosts.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'comment';
+      row.innerHTML = `<div class="avatar" style="background:${gradients[hashStr(who)%gradients.length]}"></div>
+        <div class="comment-body"><span class="cu">${who}</span><span class="ct">${p.time}</span><p>${p.text}</p></div>`;
+      postsList.appendChild(row);
+    });
+  } else {
+    postsWrap.classList.add('hidden');
+  }
+}
+document.getElementById('channelBlock').addEventListener('click', (e) => {
+  if(e.target.closest('#subscribeBtn')) return;
+  renderChannel(currentVideo.who);
+  setView('channel');
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+document.getElementById('channelBack').addEventListener('click', goHome);
+</script>
+
+</body>
+</html>
