@@ -285,6 +285,7 @@
     .reel-arrow{width:34px; height:34px;}
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -671,6 +672,11 @@
 </footer>
 
 <script>
+/* ---------- Supabase connection ---------- */
+const SUPABASE_URL = 'https://tzeehoojktzpyziqcelu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6ZWVob29qa3R6cHl6aXFjZWx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNzQ5MzQsImV4cCI6MjA5OTY1MDkzNH0.MVHmeYgfOIY8xlfb8xul2pidkrDPOBv82W5ZXcq6yuY';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const gradients = [
   'linear-gradient(135deg,#33685c,#7fae9f)',
   'linear-gradient(135deg,#e2a63a,#f4dfb0)',
@@ -828,31 +834,7 @@ function addUploadedVideo(shelfId, title, who, dur){
   if(countEl) countEl.textContent = shelfEntry.items.length + ' clips';
 }
 
-document.getElementById('uvSubmit').addEventListener('click', () => {
-  const title = document.getElementById('uvTitle').value.trim();
-  const shelfId = document.getElementById('uvCategory').value;
-  const dur = document.getElementById('uvDuration').value.trim() || '0:00';
-  const msg = document.getElementById('uvMsg');
-  if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
-  if(!title){ msg.textContent = 'Give your video a title first.'; return; }
-  addUploadedVideo(shelfId, title, state.currentUser.uname || state.currentUser.email, dur);
-  msg.textContent = `"${title}" is live in your feed.`;
-  document.getElementById('uvTitle').value = '';
-  document.getElementById('uvDuration').value = '';
-  setTimeout(() => {
-    document.getElementById('uploadVideoModal').classList.add('hidden');
-    msg.textContent = '';
-    setView('home');
-    document.getElementById(shelfId).scrollIntoView({behavior:'smooth', block:'start'});
-  }, 1000);
-});
-
-document.getElementById('urSubmit').addEventListener('click', () => {
-  const cap = document.getElementById('urCaption').value.trim();
-  const msg = document.getElementById('urMsg');
-  if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
-  if(!cap){ msg.textContent = 'Add a caption for your reel first.'; return; }
-  const who = state.currentUser.uname || state.currentUser.email;
+function addUploadedReel(cap, who){
   const title = cap.length > 40 ? cap.slice(0,40) + '…' : cap;
   const i = reelData.length;
   reelData.push([title, who, cap]);
@@ -873,21 +855,9 @@ document.getElementById('urSubmit').addEventListener('click', () => {
     </div>`;
   reelsContainer.appendChild(slide);
   allVideos.push({ title, who, kind:'reel', action: () => setView('reels') });
-  msg.textContent = 'Your reel is live.';
-  document.getElementById('urCaption').value = '';
-  setTimeout(() => {
-    document.getElementById('uploadReelModal').classList.add('hidden');
-    msg.textContent = '';
-    setView('reels');
-  }, 1000);
-});
+}
 
-document.getElementById('glSubmit').addEventListener('click', () => {
-  const title = document.getElementById('glTitle').value.trim();
-  const msg = document.getElementById('glMsg');
-  if(!state.currentUser){ msg.textContent = 'Create an account first to go live.'; return; }
-  if(!title){ msg.textContent = 'Give your stream a title first.'; return; }
-  const who = state.currentUser.uname || state.currentUser.email;
+function addUploadedLive(title, who){
   const i = liveItems.length;
   liveItems.push([title, who, '1']);
   const card = document.createElement('div');
@@ -900,6 +870,65 @@ document.getElementById('glSubmit').addEventListener('click', () => {
   card.addEventListener('click', () => setView('live'));
   liveTrack.appendChild(card);
   allVideos.push({ title, who, kind:'live', watching:'1', action: () => setView('live') });
+}
+
+async function insertVideoRow(title, category, kind, duration){
+  if(!state.currentUser) return;
+  const { error } = await sb.from('videos').insert({ owner: state.currentUser.id, title, category, kind, duration });
+  if(error) console.error('Supabase insert (videos) failed:', error.message);
+}
+async function insertPostRow(content){
+  if(!state.currentUser) return;
+  const { error } = await sb.from('posts').insert({ owner: state.currentUser.id, content });
+  if(error) console.error('Supabase insert (posts) failed:', error.message);
+}
+
+document.getElementById('uvSubmit').addEventListener('click', async () => {
+  const title = document.getElementById('uvTitle').value.trim();
+  const shelfId = document.getElementById('uvCategory').value;
+  const dur = document.getElementById('uvDuration').value.trim() || '0:00';
+  const msg = document.getElementById('uvMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
+  if(!title){ msg.textContent = 'Give your video a title first.'; return; }
+  const who = state.currentUser.uname || state.currentUser.email;
+  addUploadedVideo(shelfId, title, who, dur);
+  insertVideoRow(title, shelfId, 'video', dur);
+  msg.textContent = `"${title}" is live in your feed.`;
+  document.getElementById('uvTitle').value = '';
+  document.getElementById('uvDuration').value = '';
+  setTimeout(() => {
+    document.getElementById('uploadVideoModal').classList.add('hidden');
+    msg.textContent = '';
+    setView('home');
+    document.getElementById(shelfId).scrollIntoView({behavior:'smooth', block:'start'});
+  }, 1000);
+});
+
+document.getElementById('urSubmit').addEventListener('click', async () => {
+  const cap = document.getElementById('urCaption').value.trim();
+  const msg = document.getElementById('urMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
+  if(!cap){ msg.textContent = 'Add a caption for your reel first.'; return; }
+  const who = state.currentUser.uname || state.currentUser.email;
+  addUploadedReel(cap, who);
+  insertVideoRow(cap, null, 'reel', null);
+  msg.textContent = 'Your reel is live.';
+  document.getElementById('urCaption').value = '';
+  setTimeout(() => {
+    document.getElementById('uploadReelModal').classList.add('hidden');
+    msg.textContent = '';
+    setView('reels');
+  }, 1000);
+});
+
+document.getElementById('glSubmit').addEventListener('click', async () => {
+  const title = document.getElementById('glTitle').value.trim();
+  const msg = document.getElementById('glMsg');
+  if(!state.currentUser){ msg.textContent = 'Create an account first to go live.'; return; }
+  if(!title){ msg.textContent = 'Give your stream a title first.'; return; }
+  const who = state.currentUser.uname || state.currentUser.email;
+  addUploadedLive(title, who);
+  insertVideoRow(title, null, 'live', null);
   msg.textContent = 'You are live!';
   document.getElementById('glTitle').value = '';
   setTimeout(() => {
@@ -909,12 +938,13 @@ document.getElementById('glSubmit').addEventListener('click', () => {
   }, 1000);
 });
 
-document.getElementById('cpSubmit').addEventListener('click', () => {
+document.getElementById('cpSubmit').addEventListener('click', async () => {
   const text = document.getElementById('cpText').value.trim();
   const msg = document.getElementById('cpMsg');
   if(!state.currentUser){ msg.textContent = 'Create an account first to post.'; return; }
   if(!text){ msg.textContent = 'Write something to post first.'; return; }
   state.myPosts.unshift({ text, time: 'Just now' });
+  insertPostRow(text);
   msg.textContent = 'Posted to your channel.';
   document.getElementById('cpText').value = '';
   setTimeout(() => {
@@ -942,7 +972,7 @@ chips.forEach(chip => {
     document.getElementById('submitMsg').textContent = `Focus set to ${chip.dataset.purpose}. This shapes your first shelf.`;
   });
 });
-document.getElementById('submitBtn').addEventListener('click', () => {
+document.getElementById('submitBtn').addEventListener('click', async () => {
   const selected = document.querySelector('.purpose-chip.selected');
   const email = document.getElementById('email').value.trim();
   const uname = document.getElementById('uname').value.trim();
@@ -950,10 +980,32 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   const pw2 = document.getElementById('pw2').value;
   const msg = document.getElementById('submitMsg');
   if(!email){ msg.textContent = "Add an email to create your account."; return; }
+  if(!uname){ msg.textContent = "Pick a display name first."; return; }
   if(!selected){ msg.textContent = "Choose a focus above first."; return; }
   if(pw.length < 8){ msg.textContent = "Your password needs to be at least 8 characters."; return; }
   if(pw !== pw2){ msg.textContent = "Those passwords don't match — try again."; return; }
-  const account = { email, uname, purpose: selected.dataset.purpose };
+
+  msg.textContent = "Creating your account…";
+  let { data, error } = await sb.auth.signUp({ email, password: pw });
+
+  if(error && /already registered|already exists/i.test(error.message)){
+    const signInRes = await sb.auth.signInWithPassword({ email, password: pw });
+    data = signInRes.data; error = signInRes.error;
+    if(error){ msg.textContent = "That email is already registered — check your password and try again."; return; }
+  } else if(error){
+    msg.textContent = "Couldn't create account: " + error.message;
+    return;
+  }
+
+  if(!data.session){
+    msg.textContent = "Account created — check your email to confirm it, then come back and sign in.";
+    return;
+  }
+
+  const user = data.user;
+  await sb.from('profiles').upsert({ id: user.id, uname, purpose: selected.dataset.purpose });
+
+  const account = { id: user.id, email, uname, purpose: selected.dataset.purpose };
   state.accounts.push(account);
   state.currentUser = account;
   msg.textContent = `Account created for ${email} — welcome to your ${selected.dataset.purpose} shelf.`;
@@ -1416,6 +1468,43 @@ document.getElementById('channelBlock').addEventListener('click', (e) => {
   window.scrollTo({top:0, behavior:'smooth'});
 });
 document.getElementById('channelBack').addEventListener('click', goHome);
+
+/* ---------- restore session + load uploaded content from Supabase ---------- */
+async function loadFromSupabase(){
+  const { data: sessionData } = await sb.auth.getSession();
+  const session = sessionData && sessionData.session;
+  if(session && session.user){
+    const user = session.user;
+    let uname = user.email;
+    let purpose = null;
+    const { data: profile } = await sb.from('profiles').select('uname, purpose').eq('id', user.id).single();
+    if(profile){ uname = profile.uname || uname; purpose = profile.purpose; }
+    const account = { id: user.id, email: user.email, uname, purpose };
+    state.accounts.push(account);
+    state.currentUser = account;
+    document.getElementById('createAccountBtn').classList.add('hidden');
+    document.getElementById('createDropdownWrap').classList.remove('hidden');
+    document.getElementById('avatarBtn').textContent = uname ? uname.trim().charAt(0).toUpperCase() : 'I';
+
+    const { data: myPosts } = await sb.from('posts').select('content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
+    if(myPosts){ state.myPosts = myPosts.map(p => ({ text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
+  }
+
+  const { data: videos, error } = await sb.from('videos').select('title, category, kind, duration, owner, profiles(uname)').order('created_at', { ascending:true });
+  if(error){ console.error('Supabase load (videos) failed:', error.message); return; }
+  (videos || []).forEach(v => {
+    const who = (v.profiles && v.profiles.uname) || 'creator';
+    if(v.kind === 'video' && v.category){
+      addUploadedVideo(v.category, v.title, who, v.duration || '0:00');
+    } else if(v.kind === 'reel'){
+      addUploadedReel(v.title, who);
+    } else if(v.kind === 'live'){
+      addUploadedLive(v.title, who);
+    }
+  });
+}
+loadFromSupabase();
+
 </script>
 
 </body>
