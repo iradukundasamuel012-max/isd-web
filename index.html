@@ -378,9 +378,10 @@
         <option value="shelf-business">Business</option>
       </select>
     </div>
-    <div class="upload-field"><label for="uvDuration">Duration</label><input id="uvDuration" type="text" placeholder="e.g. 6:20"></div>
+    <div class="upload-field"><label for="uvFile">Video file</label><input id="uvFile" type="file" accept="video/*"></div>
     <button class="btn btn-solid" id="uvSubmit" style="width:100%;">Upload video</button>
     <p class="modal-foot" id="uvMsg"></p>
+    <p class="modal-foot" id="uvProgress"></p>
   </div>
 </div>
 
@@ -490,27 +491,24 @@
 
     <!-- ================= LIVE VIEW ================= -->
     <div class="view" id="view-live">
-      <section class="live-hero">
+      <section class="live-hero" id="liveHero">
         <div>
-          <div class="live-player"><span class="live-badge">LIVE</span><span class="live-viewers">1.2k watching</span></div>
+          <div class="live-player"><span class="live-badge">LIVE</span><span class="live-viewers" id="liveHeroViewers">0 watching</span></div>
           <div class="live-info">
-            <h2>Glazing a full tea set — ask me anything</h2>
-            <div class="who"><div class="avatar" style="background:linear-gradient(135deg,#8a5a44,#c99a76)"></div><span>wetclaydiary · 6.4k subscribers</span></div>
-            <p class="desc">Streaming the whole glazing process from bisque to kiln, taking questions in chat as I go. First stream of the week — say hi.</p>
+            <h2 id="liveHeroTitle">Nobody's live right now</h2>
+            <div class="who" id="liveHeroWho"><div class="avatar" style="background:var(--teal)"></div><span>Check back soon, or go live yourself</span></div>
+            <p class="desc" id="liveHeroDesc">When someone on ISD starts a live stream, it shows up here.</p>
           </div>
         </div>
         <div class="live-chat">
           <h4>Live chat</h4>
-          <div class="chat-msg"><b>mara.sketches:</b> what glaze is that blue one?</div>
-          <div class="chat-msg"><b>offcutbuilds:</b> the handles came out so clean</div>
-          <div class="chat-msg"><b>quietbooth:</b> following for the kiln reveal</div>
-          <div class="chat-msg"><b>chalkandholds:</b> how long till it's kiln-ready?</div>
+          <div class="empty-state" id="liveChatEmpty">Chat will appear here once a stream is live.</div>
         </div>
       </section>
       <section class="live-shelf-wrap">
         <div class="shelf">
           <div class="shelf-head">
-            <div><h3>Live now</h3><span class="count">4 streaming</span></div>
+            <div><h3>Live now</h3><span class="count" id="liveCount">0 streaming</span></div>
             <div class="shelf-nav"><button aria-label="Scroll left">←</button><button aria-label="Scroll right">→</button></div>
           </div>
           <div class="track" id="liveTrack"></div>
@@ -619,16 +617,16 @@
       <div class="watch-wrap">
         <div class="watch-main">
           <span class="back-link" id="watchBack">← Back to ISD</span>
-          <div class="watch-player"><div class="play-overlay">▶</div><div class="bar"></div></div>
+          <div class="watch-player" id="watchPlayer"><div class="play-overlay">▶</div><div class="bar"></div><video id="watchVideoEl" class="hidden" controls style="width:100%; height:100%; position:absolute; inset:0; border-radius:14px; background:#000;"></video></div>
           <h2 class="watch-title" id="watchTitle">Throwing your first bowl on the wheel</h2>
           <div class="watch-row">
             <div class="channel-block" id="channelBlock">
               <div class="avatar-lg" id="watchAvatar" style="background:linear-gradient(135deg,#8a5a44,#c99a76)"></div>
-              <div><div class="channel-name" id="channelName">wetclaydiary</div><div class="channel-subs" id="channelSubs">6.4K subscribers</div></div>
+              <div><div class="channel-name" id="channelName">wetclaydiary</div><div class="channel-subs" id="channelSubs">0 subscribers</div></div>
               <button class="btn btn-solid subscribe-btn" id="subscribeBtn">Subscribe</button>
             </div>
             <div class="watch-actions">
-              <button class="pill-action" id="likeBtn">👍 <span id="likeCount">1.1K</span></button>
+              <button class="pill-action" id="likeBtn">👍 <span id="likeCount">0</span></button>
               <button class="pill-action">👎</button>
               <button class="pill-action" id="saveBtn">Save</button>
               <button class="pill-action" id="shareBtn">Share</button>
@@ -636,28 +634,13 @@
             </div>
           </div>
           <div class="watch-desc">
-            <span class="watch-meta" id="watchMeta">12,480 views · 2 weeks ago</span>
+            <span class="watch-meta" id="watchMeta">0 views</span>
             <p id="watchDescText">Full walkthrough of centering, opening, and pulling up your first bowl — plus the two mistakes almost everyone makes on their first try at the wheel.</p>
           </div>
           <div class="comments">
-            <h4 id="commentCount">182 Comments</h4>
+            <h4 id="commentCount">0 Comments</h4>
             <div class="add-comment"><div class="avatar" style="background:var(--teal)"></div><input placeholder="Add a comment..."></div>
-            <div class="comment">
-              <div class="avatar" style="background:linear-gradient(135deg,#33685c,#7fae9f)"></div>
-              <div class="comment-body">
-                <span class="cu">line.lab</span><span class="ct">3 days ago</span>
-                <p>The bit about keeping your elbows braced fixed my wobble instantly.</p>
-                <div class="comment-actions"><span>👍 42</span><span>Reply</span></div>
-              </div>
-            </div>
-            <div class="comment">
-              <div class="avatar" style="background:linear-gradient(135deg,#e2a63a,#f4dfb0)"></div>
-              <div class="comment-body">
-                <span class="cu">spokewise</span><span class="ct">1 week ago</span>
-                <p>Didn't expect a pottery video to get me this hyped, but here we are.</p>
-                <div class="comment-actions"><span>👍 18</span><span>Reply</span></div>
-              </div>
-            </div>
+            <div class="empty-state" id="commentsEmpty">No comments yet — be the first to say something.</div>
           </div>
         </div>
         <div class="watch-side" id="watchSide"></div>
@@ -685,6 +668,7 @@ const gradients = [
   'linear-gradient(135deg,#234a41,#33685c)',
   'linear-gradient(135deg,#c99a76,#8a5a44)'
 ];
+const channelIdByName = {};
 
 /* ---------- sidebar toggle + responsive init ---------- */
 const sidebar = document.getElementById('sidebar');
@@ -715,8 +699,9 @@ function goHome(){
 /* ---------- auth modal ---------- */
 const authModal = document.getElementById('authModal');
 const createModal = document.getElementById('createModal');
-document.getElementById('googleBtn').addEventListener('click', () => authModal.classList.add('hidden'));
-document.getElementById('guestBtn').addEventListener('click', () => authModal.classList.add('hidden'));
+if(localStorage.getItem('isd_visited')){ authModal.classList.add('hidden'); }
+document.getElementById('googleBtn').addEventListener('click', () => { authModal.classList.add('hidden'); localStorage.setItem('isd_visited','1'); });
+document.getElementById('guestBtn').addEventListener('click', () => { authModal.classList.add('hidden'); localStorage.setItem('isd_visited','1'); });
 document.getElementById('gotoSignup').addEventListener('click', () => {
   authModal.classList.add('hidden');
   createModal.classList.remove('hidden');
@@ -813,39 +798,38 @@ document.getElementById('menuCreatePost').addEventListener('click', () => openUp
   modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
 });
 
-function addUploadedVideo(shelfId, title, who, dur){
-  const track = document.querySelector('#' + shelfId + ' .track');
-  const shelfEntry = shelfData.find(s => s.id === shelfId);
+function addUploadedVideo(v){
+  const track = document.querySelector('#' + v.category + ' .track');
+  const shelfEntry = shelfData.find(s => s.id === v.category);
   if(!shelfEntry || !track) return;
-  shelfEntry.items.push([title, who, dur]);
-  const i = shelfEntry.items.length - 1;
-  const si = shelfData.indexOf(shelfEntry);
+  shelfEntry.items.push(v);
+  if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <div class="thumb" style="background:${gradients[(si+i)%gradients.length]}"><span class="dur">${dur}</span></div>
-    <div class="card-title">${title}</div>
-    <div class="card-meta"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div><span class="who">${who}</span></div>
-    <div class="card-stats">0.1k views · new upload</div>`;
-  card.addEventListener('click', () => openWatch(title, who));
+    <div class="thumb" style="background:${gradients[hashStr(v.title)%gradients.length]}"></div>
+    <div class="card-title">${v.title}</div>
+    <div class="card-meta"><div class="avatar" style="background:${gradients[hashStr(v.who)%gradients.length]}"></div><span class="who">${v.who}</span></div>
+    <div class="card-stats">${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}</div>`;
+  card.addEventListener('click', () => openWatch(v));
   track.appendChild(card);
-  allVideos.push({ title, who, dur, kind:'video', action: () => openWatch(title, who) });
-  const countEl = document.querySelector('#' + shelfId + ' .count');
+  allVideos.push({ ...v, kind:'video', action: () => openWatch(v) });
+  const countEl = document.querySelector('#' + v.category + ' .count');
   if(countEl) countEl.textContent = shelfEntry.items.length + ' clips';
 }
 
-function addUploadedReel(cap, who){
-  const title = cap.length > 40 ? cap.slice(0,40) + '…' : cap;
+function addUploadedReel(v){
   const i = reelData.length;
-  reelData.push([title, who, cap]);
+  reelData.push(v);
+  if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   const slide = document.createElement('div');
   slide.className = 'reel-slide';
   slide.innerHTML = `
     <div class="reel-frame" style="background:${gradients[i%gradients.length]}">
       <div class="reel-topbar">REEL ${i+1} / ${reelData.length}</div>
       <div class="reel-bottom">
-        <div class="who"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div>${who}</div>
-        <div class="cap">${cap}</div>
+        <div class="who"><div class="avatar" style="background:${gradients[(i+2)%gradients.length]}"></div>${v.who}</div>
+        <div class="cap">${v.title}</div>
       </div>
       <div class="reel-actions">
         <div><button aria-label="Like">👍</button><div class="ct">0</div></div>
@@ -854,51 +838,105 @@ function addUploadedReel(cap, who){
       </div>
     </div>`;
   reelsContainer.appendChild(slide);
-  allVideos.push({ title, who, kind:'reel', action: () => setView('reels') });
+  allVideos.push({ ...v, kind:'reel', action: () => setView('reels') });
+  updateReelsEmptyState();
 }
 
-function addUploadedLive(title, who){
+function addUploadedLive(v){
   const i = liveItems.length;
-  liveItems.push([title, who, '1']);
+  liveItems.push(v);
+  if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
     <div class="thumb" style="background:${gradients[i%gradients.length]}"><span class="live-tag">LIVE</span></div>
-    <div class="card-title">${title}</div>
-    <div class="card-meta"><div class="avatar" style="background:${gradients[(i+3)%gradients.length]}"></div><span class="who">${who}</span></div>
-    <div class="card-stats">1 watching now</div>`;
+    <div class="card-title">${v.title}</div>
+    <div class="card-meta"><div class="avatar" style="background:${gradients[(i+3)%gradients.length]}"></div><span class="who">${v.who}</span></div>
+    <div class="card-stats">Live now</div>`;
   card.addEventListener('click', () => setView('live'));
   liveTrack.appendChild(card);
-  allVideos.push({ title, who, kind:'live', watching:'1', action: () => setView('live') });
+  allVideos.push({ ...v, kind:'live', action: () => setView('live') });
+  updateLiveHero();
 }
 
-async function insertVideoRow(title, category, kind, duration){
-  if(!state.currentUser) return;
-  const { error } = await sb.from('videos').insert({ owner: state.currentUser.id, title, category, kind, duration });
-  if(error) console.error('Supabase insert (videos) failed:', error.message);
+function updateReelsEmptyState(){
+  let empty = document.getElementById('reelsEmpty');
+  if(reelData.length){ if(empty) empty.remove(); return; }
+  if(!empty){
+    empty = document.createElement('div');
+    empty.id = 'reelsEmpty';
+    empty.className = 'empty-state';
+    empty.style.cssText = 'margin:auto;';
+    empty.textContent = 'No reels yet — be the first to upload one.';
+    reelsContainer.appendChild(empty);
+  }
+}
+
+function updateLiveHero(){
+  const countEl = document.getElementById('liveCount');
+  if(countEl) countEl.textContent = liveItems.length + ' streaming';
+  if(!liveItems.length){
+    document.getElementById('liveHeroTitle').textContent = "Nobody's live right now";
+    document.getElementById('liveHeroWho').innerHTML = `<div class="avatar" style="background:var(--teal)"></div><span>Check back soon, or go live yourself</span>`;
+    document.getElementById('liveHeroDesc').textContent = 'When someone on ISD starts a live stream, it shows up here.';
+    document.getElementById('liveHeroViewers').textContent = '0 watching';
+    return;
+  }
+  const latest = liveItems[liveItems.length - 1];
+  document.getElementById('liveHeroTitle').textContent = latest.title;
+  document.getElementById('liveHeroWho').innerHTML = `<div class="avatar" style="background:${gradients[hashStr(latest.who)%gradients.length]}"></div><span>${latest.who} · live now</span>`;
+  document.getElementById('liveHeroDesc').textContent = `${latest.who} is streaming live on ISD right now.`;
+  document.getElementById('liveHeroViewers').textContent = '1 watching';
+}
+
+async function insertVideoRow(title, category, kind, video_url){
+  if(!state.currentUser) return null;
+  const { data, error } = await sb.from('videos').insert({ owner: state.currentUser.id, title, category, kind, video_url }).select().single();
+  if(error){ console.error('Supabase insert (videos) failed:', error.message); return null; }
+  return data;
 }
 async function insertPostRow(content){
   if(!state.currentUser) return;
   const { error } = await sb.from('posts').insert({ owner: state.currentUser.id, content });
   if(error) console.error('Supabase insert (posts) failed:', error.message);
 }
+async function uploadFileToStorage(file, folder){
+  if(!file || !state.currentUser) return null;
+  const path = `${state.currentUser.id}/${folder}/${Date.now()}_${file.name}`;
+  const { error } = await sb.storage.from('videos').upload(path, file);
+  if(error){ console.error('Supabase storage upload failed:', error.message); return null; }
+  const { data } = sb.storage.from('videos').getPublicUrl(path);
+  return data ? data.publicUrl : null;
+}
 
 document.getElementById('uvSubmit').addEventListener('click', async () => {
   const title = document.getElementById('uvTitle').value.trim();
   const shelfId = document.getElementById('uvCategory').value;
-  const dur = document.getElementById('uvDuration').value.trim() || '0:00';
+  const fileInput = document.getElementById('uvFile');
+  const file = fileInput.files[0];
   const msg = document.getElementById('uvMsg');
+  const progress = document.getElementById('uvProgress');
   if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
   if(!title){ msg.textContent = 'Give your video a title first.'; return; }
   const who = state.currentUser.uname || state.currentUser.email;
-  addUploadedVideo(shelfId, title, who, dur);
-  insertVideoRow(title, shelfId, 'video', dur);
+  const submitBtn = document.getElementById('uvSubmit');
+  submitBtn.disabled = true;
+  let videoUrl = null;
+  if(file){
+    progress.textContent = 'Uploading your video file…';
+    videoUrl = await uploadFileToStorage(file, 'videos');
+    progress.textContent = videoUrl ? '' : "Couldn't upload the file — check the videos storage bucket exists and is public.";
+  }
+  const row = await insertVideoRow(title, shelfId, 'video', videoUrl);
+  submitBtn.disabled = false;
+  if(!row){ msg.textContent = 'Something went wrong saving your video — try again.'; return; }
+  addUploadedVideo({ id: row.id, title, who, ownerId: state.currentUser.id, category: shelfId, views: 0, video_url: videoUrl });
   msg.textContent = `"${title}" is live in your feed.`;
   document.getElementById('uvTitle').value = '';
-  document.getElementById('uvDuration').value = '';
+  fileInput.value = '';
   setTimeout(() => {
     document.getElementById('uploadVideoModal').classList.add('hidden');
-    msg.textContent = '';
+    msg.textContent = ''; progress.textContent = '';
     setView('home');
     document.getElementById(shelfId).scrollIntoView({behavior:'smooth', block:'start'});
   }, 1000);
@@ -910,8 +948,9 @@ document.getElementById('urSubmit').addEventListener('click', async () => {
   if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
   if(!cap){ msg.textContent = 'Add a caption for your reel first.'; return; }
   const who = state.currentUser.uname || state.currentUser.email;
-  addUploadedReel(cap, who);
-  insertVideoRow(cap, null, 'reel', null);
+  const row = await insertVideoRow(cap, null, 'reel', null);
+  if(!row){ msg.textContent = 'Something went wrong saving your reel — try again.'; return; }
+  addUploadedReel({ id: row.id, title: cap, who, ownerId: state.currentUser.id, views: 0 });
   msg.textContent = 'Your reel is live.';
   document.getElementById('urCaption').value = '';
   setTimeout(() => {
@@ -927,8 +966,9 @@ document.getElementById('glSubmit').addEventListener('click', async () => {
   if(!state.currentUser){ msg.textContent = 'Create an account first to go live.'; return; }
   if(!title){ msg.textContent = 'Give your stream a title first.'; return; }
   const who = state.currentUser.uname || state.currentUser.email;
-  addUploadedLive(title, who);
-  insertVideoRow(title, null, 'live', null);
+  const row = await insertVideoRow(title, null, 'live', null);
+  if(!row){ msg.textContent = 'Something went wrong going live — try again.'; return; }
+  addUploadedLive({ id: row.id, title, who, ownerId: state.currentUser.id });
   msg.textContent = 'You are live!';
   document.getElementById('glTitle').value = '';
   setTimeout(() => {
@@ -1009,6 +1049,8 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   state.accounts.push(account);
   state.currentUser = account;
   msg.textContent = `Account created for ${email} — welcome to your ${selected.dataset.purpose} shelf.`;
+  localStorage.setItem('isd_visited','1');
+  authModal.classList.add('hidden');
   document.getElementById('createAccountBtn').classList.add('hidden');
   document.getElementById('createDropdownWrap').classList.remove('hidden');
   document.getElementById('avatarBtn').textContent = uname ? uname.trim().charAt(0).toUpperCase() : 'I';
@@ -1060,95 +1102,128 @@ let lastNonSearchView = 'home';
 let currentVideo = { title:'', who:'' };
 
 function hashStr(s){ let h = 0; for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; } return h; }
-function channelSubsText(who){ const h = hashStr(who); return `${(h % 120) + 5}.${Math.floor(h/7)%10}K subscribers`; }
-function viewsMetaText(title){
-  const h = hashStr(title);
-  const v = 800 + (h % 45000);
-  const w = (h % 10) + 1;
-  return `${v.toLocaleString()} views · ${w} week${w>1?'s':''} ago`;
-}
-function likeCountText(title){ const h = hashStr(title + 'like'); return `${(h % 30) + 1}.${Math.floor(h/13)%10}K`; }
 function videoKey(title, who){ return title + '|' + who; }
 
-function openWatch(title, who){
-  title = title || document.getElementById('watchTitle').textContent;
-  who = who || document.getElementById('channelName').textContent;
-  currentVideo = { title, who };
-  document.getElementById('watchTitle').textContent = title;
-  document.getElementById('channelName').textContent = who;
-  document.getElementById('channelSubs').textContent = channelSubsText(who);
-  document.getElementById('watchMeta').textContent = viewsMetaText(title);
-  document.getElementById('watchDescText').textContent = `Full walkthrough and behind-the-scenes look at "${title}" from ${who}.`;
-  document.getElementById('watchAvatar').style.background = gradients[hashStr(who) % gradients.length];
+async function getSubscriberCount(ownerId){
+  if(!ownerId) return 0;
+  const { count, error } = await sb.from('subscriptions').select('*', { count: 'exact', head: true }).eq('channel_owner', ownerId);
+  if(error){ console.error('Subscriber count failed:', error.message); return 0; }
+  return count || 0;
+}
+async function isSubscribedTo(ownerId){
+  if(!ownerId || !state.currentUser) return false;
+  const { data } = await sb.from('subscriptions').select('id').eq('subscriber', state.currentUser.id).eq('channel_owner', ownerId).maybeSingle();
+  return !!data;
+}
+function paintSubCount(who, count){
+  document.querySelectorAll(`[data-subs-for="${CSS.escape(who)}"]`).forEach(el => {
+    el.textContent = `${count} subscriber${count === 1 ? '' : 's'}`;
+  });
+}
+async function toggleSubscription(ownerId, who, btnEl){
+  if(!state.currentUser){ alert('Create an ISD account first to subscribe.'); return; }
+  if(!ownerId){ alert("This creator's channel isn't set up for subscriptions yet."); return; }
+  const wasSubscribed = btnEl.classList.contains('subscribed');
+  if(wasSubscribed){
+    await sb.from('subscriptions').delete().eq('subscriber', state.currentUser.id).eq('channel_owner', ownerId);
+  } else {
+    await sb.from('subscriptions').insert({ subscriber: state.currentUser.id, channel_owner: ownerId });
+  }
+  document.querySelectorAll(`[data-sub-target="${CSS.escape(who)}"]`).forEach(el => {
+    el.textContent = wasSubscribed ? 'Subscribe' : 'Subscribed';
+    el.classList.toggle('subscribed', !wasSubscribed);
+  });
+  const count = await getSubscriberCount(ownerId);
+  paintSubCount(who, count);
+}
 
-  const key = videoKey(title, who);
+function openWatch(a, b){
+  let v;
+  if(typeof a === 'object' && a !== null){
+    v = a;
+  } else {
+    const key = videoKey(a, b);
+    v = allVideos.find(x => videoKey(x.title, x.who) === key) || { title: a, who: b, views: 0 };
+  }
+  currentVideo = v;
+  const ownerId = v.ownerId || channelIdByName[v.who];
+
+  document.getElementById('watchTitle').textContent = v.title;
+  document.getElementById('channelName').textContent = v.who;
+  const subsEl = document.getElementById('channelSubs');
+  subsEl.textContent = '… subscribers';
+  subsEl.dataset.subsFor = v.who;
+  document.getElementById('watchMeta').textContent = `${(v.views || 0).toLocaleString()} view${(v.views || 0) === 1 ? '' : 's'}`;
+  document.getElementById('watchDescText').textContent = v.who ? `Shared by ${v.who} on ISD.` : '';
+  document.getElementById('watchAvatar').style.background = gradients[hashStr(v.who || '') % gradients.length];
+
+  const videoEl = document.getElementById('watchVideoEl');
+  const playerWrap = document.getElementById('watchPlayer');
+  if(v.video_url){
+    videoEl.src = v.video_url;
+    videoEl.classList.remove('hidden');
+    playerWrap.querySelector('.play-overlay').style.display = 'none';
+    playerWrap.querySelector('.bar').style.display = 'none';
+  } else {
+    videoEl.pause && videoEl.pause();
+    videoEl.removeAttribute('src');
+    videoEl.classList.add('hidden');
+    playerWrap.querySelector('.play-overlay').style.display = '';
+    playerWrap.querySelector('.bar').style.display = '';
+  }
+
+  const key = videoKey(v.title, v.who);
   const likeBtn = document.getElementById('likeBtn');
   const saveBtn = document.getElementById('saveBtn');
   const subBtn = document.getElementById('subscribeBtn');
+  subBtn.dataset.subTarget = v.who;
 
   likeBtn.classList.toggle('active', state.likedVideos.has(key));
-  document.getElementById('likeCount').textContent = likeCountText(title);
+  document.getElementById('likeCount').textContent = state.likedVideos.has(key) ? '1' : '0';
   saveBtn.textContent = state.watchLater.has(key) ? 'Saved' : 'Save';
   saveBtn.classList.toggle('active', state.watchLater.has(key));
-  const subscribed = state.subscriptions.has(who);
-  subBtn.textContent = subscribed ? 'Subscribed' : 'Subscribe';
-  subBtn.classList.toggle('subscribed', subscribed);
+  subBtn.textContent = 'Subscribe';
+  subBtn.classList.remove('subscribed');
+
+  getSubscriberCount(ownerId).then(count => paintSubCount(v.who, count));
+  isSubscribedTo(ownerId).then(sub => {
+    if(subBtn.dataset.subTarget !== v.who) return;
+    subBtn.textContent = sub ? 'Subscribed' : 'Subscribe';
+    subBtn.classList.toggle('subscribed', sub);
+  });
 
   likeBtn.onclick = () => {
     state.likedVideos.has(key) ? state.likedVideos.delete(key) : state.likedVideos.add(key);
     likeBtn.classList.toggle('active', state.likedVideos.has(key));
+    document.getElementById('likeCount').textContent = state.likedVideos.has(key) ? '1' : '0';
   };
   saveBtn.onclick = () => {
     if(state.watchLater.has(key)){ state.watchLater.delete(key); saveBtn.textContent = 'Save'; saveBtn.classList.remove('active'); }
     else { state.watchLater.add(key); saveBtn.textContent = 'Saved'; saveBtn.classList.add('active'); }
   };
-  subBtn.onclick = () => {
-    if(state.subscriptions.has(who)){ state.subscriptions.delete(who); subBtn.textContent = 'Subscribe'; subBtn.classList.remove('subscribed'); }
-    else { state.subscriptions.add(who); subBtn.textContent = 'Subscribed'; subBtn.classList.add('subscribed'); }
-  };
+  subBtn.onclick = () => toggleSubscription(ownerId, v.who, subBtn);
 
   state.watchHistory = state.watchHistory.filter(w => videoKey(w.title, w.who) !== key);
-  state.watchHistory.unshift({title, who});
+  state.watchHistory.unshift(v);
   if(state.watchHistory.length > 25) state.watchHistory.length = 25;
+
+  if(v.id && v.kind !== 'live'){
+    v.views = (v.views || 0) + 1;
+    document.getElementById('watchMeta').textContent = `${v.views.toLocaleString()} view${v.views === 1 ? '' : 's'}`;
+    sb.rpc('increment_views', { video_id: v.id }).then(() => {});
+  }
 
   setView('watch');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
+
 /* ---------- shelves ---------- */
 const shelfData = [
-  { id:"shelf-entertain", title: "Entertain", items: [
-    ["My clay creations vs. my expectations", "wetclaydiary", "4:18"],
-    ["Every runner's first 5k, ranked", "runwithtomi", "3:02"],
-    ["Guitar practice but it's 2am", "fret.notes", "2:41"],
-    ["Sketchbook fails compilation", "kito.draws", "5:37"],
-    ["Things climbers say vs. mean", "chalkandholds", "3:55"],
-    ["My woodworking measurements, a tragedy", "shaveandfit", "4:04"],
-  ]},
-  { id:"shelf-sport", title: "Sport & Movement", items: [
-    ["Fixing your 5k pacing", "runwithtomi", "9:02"],
-    ["Footwork drills for beginners", "courtcraft", "4:33"],
-    ["Home mobility routine, 15 min", "moveslow", "15:00"],
-    ["Climbing your first V3", "chalkandholds", "7:48"],
-    ["Bike setup for long rides", "spokewise", "10:21"],
-    ["Post-game recovery basics", "trainquiet", "6:10"],
-  ]},
-  { id:"shelf-education", title: "Education", items: [
-    ["Ear training for absolute beginners", "pitchwalk", "9:19"],
-    ["Building a comic panel layout, step by step", "line.lab", "6:27"],
-    ["Ink wash basics for beginners", "penandpetal", "11:05"],
-    ["Soldering basics for small repairs", "benchwork", "6:35"],
-    ["How centering clay actually works", "wetclaydiary", "10:09"],
-    ["Reading a training plan without guessing", "trainquiet", "8:40"],
-  ]},
-  { id:"shelf-business", title: "Business", items: [
-    ["Pricing your first commissions", "graphite.jo", "9:47"],
-    ["Turning a hobby channel into income", "renderloop", "12:02"],
-    ["Simple invoicing for freelance creators", "benchwork", "7:15"],
-    ["Booking your first paid gig", "hum.and.hook", "6:33"],
-    ["What I charge for coaching sessions", "courtcraft", "8:58"],
-    ["Basic budgeting for a small workshop", "slowdye", "10:14"],
-  ]},
+  { id:"shelf-entertain", title: "Entertain", items: [] },
+  { id:"shelf-sport", title: "Sport & Movement", items: [] },
+  { id:"shelf-education", title: "Education", items: [] },
+  { id:"shelf-business", title: "Business", items: [] },
 ];
 const shelvesEl = document.getElementById('shelves');
 shelfData.forEach((shelf, si) => {
@@ -1182,12 +1257,7 @@ shelfData.forEach((shelf, si) => {
 });
 
 /* ---------- live shelf ---------- */
-const liveItems = [
-  ["Glazing a full tea set — AMA", "wetclaydiary", "1.2k"],
-  ["Morning trail run, live route", "runwithtomi", "410"],
-  ["Late-night sketch session", "kito.draws", "780"],
-  ["Learning a new riff live", "fret.notes", "295"],
-];
+const liveItems = [];
 const liveTrack = document.getElementById('liveTrack');
 liveItems.forEach((item, i) => {
   const [title, who, watching] = item;
@@ -1207,16 +1277,10 @@ if(liveArrows.length === 2){
   liveArrows[0].addEventListener('click', () => liveTrack.scrollBy({left:-500, behavior:'smooth'}));
   liveArrows[1].addEventListener('click', () => liveTrack.scrollBy({left:500, behavior:'smooth'}));
 }
+updateLiveHero();
 
 /* ---------- reels ---------- */
-const reelData = [
-  ["Quick trick: loose gesture lines", "kito.draws", "Two minutes of warm-up gestures before any real drawing session."],
-  ["30-second grip fix", "courtcraft", "The one grip tweak that stopped my wrist pain."],
-  ["Tiny riff, big mood", "fret.notes", "Four notes, looped, and suddenly it's a song."],
-  ["Trimming a bowl in 40 seconds", "wetclaydiary", "Sped-up trim pass on this morning's mug."],
-  ["One-breath vocal warm-up", "quietbooth", "Do this before every recording session."],
-  ["Fastest way to true a wheel", "spokewise", "Bike wheel truing, condensed to the essentials."],
-];
+const reelData = [];
 const reelsContainer = document.getElementById('reelsContainer');
 reelData.forEach((item, i) => {
   const [title, who, cap] = item;
@@ -1240,6 +1304,7 @@ reelData.forEach((item, i) => {
 });
 document.getElementById('reelPrev').addEventListener('click', () => reelsContainer.scrollBy({left:-reelsContainer.clientWidth, behavior:'smooth'}));
 document.getElementById('reelNext').addEventListener('click', () => reelsContainer.scrollBy({left:reelsContainer.clientWidth, behavior:'smooth'}));
+updateReelsEmptyState();
 
 /* ---------- related videos (watch page) ---------- */
 const relatedItems = [
@@ -1273,7 +1338,7 @@ const searchSub = document.getElementById('searchSub');
 function buildResultCard(v){
   const card = document.createElement('div');
   card.className = 'card';
-  const stat = v.kind === 'live' ? `${v.watching || ''} watching now`.trim() : v.kind === 'reel' ? 'Reel · tap to open' : `${(hashStr(v.title)%180+2)}k views`;
+  const stat = v.kind === 'live' ? `${v.watching || ''} watching now`.trim() : v.kind === 'reel' ? 'Reel · tap to open' : `${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}`;
   const badge = v.kind === 'live' ? `<span class="live-tag">LIVE</span>` : (v.dur ? `<span class="dur">${v.dur}</span>` : '');
   card.innerHTML = `
     <div class="thumb" style="background:${gradients[hashStr(v.title) % gradients.length]}">${badge}</div>
@@ -1417,27 +1482,32 @@ function renderChannel(who){
   document.getElementById('channelPageAvatar').style.background = gradients[hashStr(who) % gradients.length];
   document.getElementById('channelPageName').textContent = who;
   const isSelf = !!(state.currentUser && (state.currentUser.uname === who || state.currentUser.email === who));
+  const ownerId = channelIdByName[who] || (isSelf ? state.currentUser.id : null);
   const vids = allVideos.filter(v => v.who === who && v.kind !== 'live');
-  document.getElementById('channelPageSubs').textContent = `${channelSubsText(who)} · ${vids.length} video${vids.length === 1 ? '' : 's'}`;
+  const subsEl = document.getElementById('channelPageSubs');
+  subsEl.textContent = `… subscribers · ${vids.length} video${vids.length === 1 ? '' : 's'}`;
+  subsEl.dataset.subsFor = who;
+  getSubscriberCount(ownerId).then(count => {
+    subsEl.textContent = `${count} subscriber${count === 1 ? '' : 's'} · ${vids.length} video${vids.length === 1 ? '' : 's'}`;
+  });
   document.getElementById('channelPageBio').textContent = isSelf && state.currentUser.purpose
     ? `Sharing ${state.currentUser.purpose} content as ${who} on ISD.`
     : `Sharing hobby videos as ${who} on ISD.`;
   const subBtn = document.getElementById('channelSubscribeBtn');
-  const syncSubBtn = () => {
-    const subscribed = state.subscriptions.has(who);
-    subBtn.textContent = subscribed ? 'Subscribed' : 'Subscribe';
-    subBtn.classList.toggle('subscribed', subscribed);
-  };
-  syncSubBtn();
-  subBtn.onclick = () => {
-    state.subscriptions.has(who) ? state.subscriptions.delete(who) : state.subscriptions.add(who);
-    syncSubBtn();
-    if(currentVideo.who === who){
-      const mainSub = document.getElementById('subscribeBtn');
-      mainSub.textContent = subBtn.textContent;
-      mainSub.classList.toggle('subscribed', state.subscriptions.has(who));
-    }
-  };
+  subBtn.dataset.subTarget = who;
+  subBtn.textContent = 'Subscribe';
+  subBtn.classList.remove('subscribed');
+  if(isSelf){
+    subBtn.classList.add('hidden');
+  } else {
+    subBtn.classList.remove('hidden');
+    isSubscribedTo(ownerId).then(sub => {
+      if(subBtn.dataset.subTarget !== who) return;
+      subBtn.textContent = sub ? 'Subscribed' : 'Subscribe';
+      subBtn.classList.toggle('subscribed', sub);
+    });
+  }
+  subBtn.onclick = () => toggleSubscription(ownerId, who, subBtn);
   const grid = document.getElementById('channelVideoGrid');
   grid.innerHTML = '';
   if(!vids.length){
@@ -1485,21 +1555,25 @@ async function loadFromSupabase(){
     document.getElementById('createAccountBtn').classList.add('hidden');
     document.getElementById('createDropdownWrap').classList.remove('hidden');
     document.getElementById('avatarBtn').textContent = uname ? uname.trim().charAt(0).toUpperCase() : 'I';
+    document.getElementById('authModal').classList.add('hidden');
+    localStorage.setItem('isd_visited','1');
 
     const { data: myPosts } = await sb.from('posts').select('content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
     if(myPosts){ state.myPosts = myPosts.map(p => ({ text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
+    document.getElementById('authModal').classList.add('hidden');
   }
 
-  const { data: videos, error } = await sb.from('videos').select('title, category, kind, duration, owner, profiles(uname)').order('created_at', { ascending:true });
+  const { data: videos, error } = await sb.from('videos').select('id, title, category, kind, video_url, views, owner, profiles(uname)').order('created_at', { ascending:true });
   if(error){ console.error('Supabase load (videos) failed:', error.message); return; }
-  (videos || []).forEach(v => {
-    const who = (v.profiles && v.profiles.uname) || 'creator';
-    if(v.kind === 'video' && v.category){
-      addUploadedVideo(v.category, v.title, who, v.duration || '0:00');
-    } else if(v.kind === 'reel'){
-      addUploadedReel(v.title, who);
-    } else if(v.kind === 'live'){
-      addUploadedLive(v.title, who);
+  (videos || []).forEach(row => {
+    const who = (row.profiles && row.profiles.uname) || 'creator';
+    const v = { id: row.id, title: row.title, who, ownerId: row.owner, category: row.category, views: row.views || 0, video_url: row.video_url };
+    if(row.kind === 'video' && row.category){
+      addUploadedVideo(v);
+    } else if(row.kind === 'reel'){
+      addUploadedReel(v);
+    } else if(row.kind === 'live'){
+      addUploadedLive(v);
     }
   });
 }
