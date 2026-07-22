@@ -619,6 +619,7 @@
             <p class="channel-bio" id="channelPageBio"></p>
           </div>
           <button class="btn btn-solid subscribe-btn" id="channelSubscribeBtn">Subscribe</button>
+          <button class="btn btn-ghost hidden" id="logoutBtn">Log out</button>
         </div>
         <div class="side-section-title" style="margin-left:0; margin-top:26px;">Videos</div>
         <div class="results-grid" id="channelVideoGrid"></div>
@@ -830,6 +831,19 @@ async function activateSession(user, profile){
   const { data: myPosts } = await sb.from('posts').select('id, content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
   if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
 }
+
+async function logOut(){
+  if(!confirm('Log out of isd?')) return;
+  await sb.auth.signOut();
+  state.currentUser = null;
+  state.myPosts = [];
+  document.getElementById('createAccountBtn').classList.remove('hidden');
+  document.getElementById('loginBtn').classList.remove('hidden');
+  document.getElementById('createDropdownWrap').classList.add('hidden');
+  updateHeaderAvatar();
+  goHome();
+}
+document.getElementById('logoutBtn').addEventListener('click', logOut);
 
 document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
   const email = document.getElementById('loginEmail').value.trim();
@@ -1758,6 +1772,7 @@ function renderChannel(who){
   document.getElementById('channelPageName').textContent = who;
   const isSelf = !!(state.currentUser && (state.currentUser.uname === who || state.currentUser.email === who));
   document.getElementById('changePhotoBtn').classList.toggle('hidden', !isSelf);
+  document.getElementById('logoutBtn').classList.toggle('hidden', !isSelf);
   const ownerId = channelIdByName[who] || (isSelf ? state.currentUser.id : null);
   const vids = allVideos.filter(v => v.who === who && v.kind !== 'live');
   const subsEl = document.getElementById('channelPageSubs');
