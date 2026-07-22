@@ -150,6 +150,7 @@
   .reel-slide{flex:none; width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:start; position:relative;}
   .reel-frame{height:92%; aspect-ratio:9/16; max-width:92vw; border-radius:20px; position:relative; overflow:hidden; box-shadow:var(--shadow);}
   .reel-topbar{position:absolute; top:14px; left:0; right:0; text-align:center; color:rgba(255,255,255,0.75); font-size:10.5px; font-family:'JetBrains Mono', monospace; letter-spacing:0.05em;}
+  .reel-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;}
   .reel-bottom{position:absolute; left:16px; right:66px; bottom:18px; color:#fff;}
   .reel-bottom .who{display:flex; align-items:center; gap:8px; font-weight:700; font-size:13.5px;}
   .reel-bottom .cap{margin-top:6px; font-size:12.5px; opacity:0.92; line-height:1.4;}
@@ -411,8 +412,10 @@
     <button class="modal-close" id="closeUploadReelModal" aria-label="Close">✕</button>
     <div class="mark" style="font-size:19px;">Upload a reel</div>
     <div class="upload-field" style="margin-top:16px;"><label for="urCaption">Caption</label><textarea id="urCaption" placeholder="Say something about this reel..."></textarea></div>
+    <div class="upload-field"><label for="urFile">Video file</label><input id="urFile" type="file" accept="video/*"></div>
     <button class="btn btn-solid" id="urSubmit" style="width:100%;">Upload reel</button>
     <p class="modal-foot" id="urMsg"></p>
+    <p class="modal-foot" id="urProgress"></p>
   </div>
 </div>
 
@@ -435,6 +438,7 @@
     <button class="modal-close" id="closeCreatePostModal" aria-label="Close">✕</button>
     <div class="mark" style="font-size:19px;">Create a post</div>
     <div class="upload-field" style="margin-top:16px;"><label for="cpText">What's on your mind?</label><textarea id="cpText" placeholder="Share an update with your subscribers..."></textarea></div>
+    <div class="upload-field"><label for="cpFile">Photo (optional)</label><input id="cpFile" type="file" accept="image/*"></div>
     <button class="btn btn-solid" id="cpSubmit" style="width:100%;">Post</button>
     <p class="modal-foot" id="cpMsg"></p>
   </div>
@@ -828,8 +832,8 @@ async function activateSession(user, profile){
   document.getElementById('loginBtn').classList.add('hidden');
   document.getElementById('createDropdownWrap').classList.remove('hidden');
   updateHeaderAvatar();
-  const { data: myPosts } = await sb.from('posts').select('id, content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
-  if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
+  const { data: myPosts } = await sb.from('posts').select('id, content, image_url, created_at').eq('owner', user.id).order('created_at', { ascending:false });
+  if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, image_url: p.image_url, time: new Date(p.created_at).toLocaleDateString() })); }
 }
 
 async function logOut(){
@@ -993,10 +997,12 @@ function addUploadedReel(v){
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
   const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete" style="top:44px;">✕</button>` : '';
+  const videoTag = v.video_url ? `<video class="reel-video" src="${v.video_url}" autoplay muted loop playsinline></video>` : '';
   const slide = document.createElement('div');
   slide.className = 'reel-slide';
   slide.innerHTML = `
-    <div class="reel-frame" style="background:${gradients[i%gradients.length]}">
+    <div class="reel-frame" style="background:${v.thumbnail_url ? `url('${v.thumbnail_url}') center/cover` : gradients[i%gradients.length]}">
+      ${videoTag}
       ${delBtn}
       <div class="reel-topbar">REEL ${i+1} / ${reelData.length}</div>
       <div class="reel-bottom">
@@ -1075,9 +1081,9 @@ async function insertVideoRow(title, category, kind, video_url, thumbnail_url){
   if(error){ console.error('Supabase insert (videos) failed:', error.message); return null; }
   return data;
 }
-async function insertPostRow(content){
+async function insertPostRow(content, image_url){
   if(!state.currentUser) return null;
-  const { data, error } = await sb.from('posts').insert({ owner: state.currentUser.id, content }).select().single();
+  const { data, error } = await sb.from('posts').insert({ owner: state.currentUser.id, content, image_url }).select().single();
   if(error){ console.error('Supabase insert (posts) failed:', error.message); return null; }
   return data;
 }
@@ -1126,7 +1132,11 @@ document.getElementById('avatarFileInput').addEventListener('change', async (e) 
   const url = await uploadFileToStorage(file, 'avatars');
   btn.textContent = 'Change photo';
   if(!url){ alert("Couldn't upload your photo — check the videos storage bucket exists and is public."); return; }
-  await sb.from('profiles').update({ avatar_url: url }).eq('id', state.currentUser.id);
+  const { error } = await sb.from('profiles').update({ avatar_url: url }).eq('id', state.currentUser.id);
+  if(error){
+    alert("Your photo uploaded, but saving it to your profile failed — it won't stick after you log out. (This usually means the profiles table needs an update policy — ask your assistant if this keeps happening.)");
+    console.error('Supabase update (profiles.avatar_url) failed:', error.message);
+  }
   state.currentUser.avatarUrl = url;
   avatarUrlByName[state.currentUser.uname || state.currentUser.email] = url;
   updateHeaderAvatar();
@@ -1151,14 +1161,16 @@ document.getElementById('uvSubmit').addEventListener('click', async () => {
   if(file){
     progress.textContent = 'Uploading your video file…';
     videoUrl = await uploadFileToStorage(file, 'videos');
-    if(videoUrl){
-      progress.textContent = 'Generating a thumbnail…';
-      const thumbFile = await captureVideoThumbnail(file);
-      if(thumbFile) thumbUrl = await uploadFileToStorage(thumbFile, 'thumbnails');
+    if(!videoUrl){
+      submitBtn.disabled = false;
       progress.textContent = '';
-    } else {
-      progress.textContent = "Couldn't upload the file — check the videos storage bucket exists and is public.";
+      msg.textContent = "Couldn't upload the video file — check your connection and try again, or the videos storage bucket may not be set up yet.";
+      return;
     }
+    progress.textContent = 'Generating a thumbnail…';
+    const thumbFile = await captureVideoThumbnail(file);
+    if(thumbFile) thumbUrl = await uploadFileToStorage(thumbFile, 'thumbnails');
+    progress.textContent = '';
   }
   const row = await insertVideoRow(title, shelfId, 'video', videoUrl, thumbUrl);
   submitBtn.disabled = false;
@@ -1177,18 +1189,41 @@ document.getElementById('uvSubmit').addEventListener('click', async () => {
 
 document.getElementById('urSubmit').addEventListener('click', async () => {
   const cap = document.getElementById('urCaption').value.trim();
+  const fileInput = document.getElementById('urFile');
+  const file = fileInput.files[0];
   const msg = document.getElementById('urMsg');
+  const progress = document.getElementById('urProgress');
   if(!state.currentUser){ msg.textContent = 'Create an account first to upload.'; return; }
   if(!cap){ msg.textContent = 'Add a caption for your reel first.'; return; }
   const who = state.currentUser.uname || state.currentUser.email;
-  const row = await insertVideoRow(cap, null, 'reel', null);
+  const submitBtn = document.getElementById('urSubmit');
+  submitBtn.disabled = true;
+  let videoUrl = null;
+  let thumbUrl = null;
+  if(file){
+    progress.textContent = 'Uploading your reel file…';
+    videoUrl = await uploadFileToStorage(file, 'reels');
+    if(!videoUrl){
+      submitBtn.disabled = false;
+      progress.textContent = '';
+      msg.textContent = "Couldn't upload the reel file — check your connection and try again.";
+      return;
+    }
+    progress.textContent = 'Generating a thumbnail…';
+    const thumbFile = await captureVideoThumbnail(file);
+    if(thumbFile) thumbUrl = await uploadFileToStorage(thumbFile, 'thumbnails');
+    progress.textContent = '';
+  }
+  const row = await insertVideoRow(cap, null, 'reel', videoUrl, thumbUrl);
+  submitBtn.disabled = false;
   if(!row){ msg.textContent = 'Something went wrong saving your reel — try again.'; return; }
-  addUploadedReel({ id: row.id, title: cap, who, ownerId: state.currentUser.id, views: 0 });
+  addUploadedReel({ id: row.id, title: cap, who, ownerId: state.currentUser.id, views: 0, video_url: videoUrl, thumbnail_url: thumbUrl });
   msg.textContent = 'Your reel is live.';
   document.getElementById('urCaption').value = '';
+  fileInput.value = '';
   setTimeout(() => {
     document.getElementById('uploadReelModal').classList.add('hidden');
-    msg.textContent = '';
+    msg.textContent = ''; progress.textContent = '';
     setView('reels');
   }, 1000);
 });
@@ -1214,13 +1249,25 @@ document.getElementById('glSubmit').addEventListener('click', async () => {
 
 document.getElementById('cpSubmit').addEventListener('click', async () => {
   const text = document.getElementById('cpText').value.trim();
+  const fileInput = document.getElementById('cpFile');
+  const file = fileInput.files[0];
   const msg = document.getElementById('cpMsg');
   if(!state.currentUser){ msg.textContent = 'Create an account first to post.'; return; }
   if(!text){ msg.textContent = 'Write something to post first.'; return; }
-  const row = await insertPostRow(text);
-  state.myPosts.unshift({ id: row && row.id, text, time: 'Just now' });
+  const submitBtn = document.getElementById('cpSubmit');
+  submitBtn.disabled = true;
+  let imageUrl = null;
+  if(file){
+    msg.textContent = 'Uploading your photo…';
+    imageUrl = await uploadFileToStorage(file, 'post-photos');
+    if(!imageUrl) msg.textContent = "Couldn't upload the photo — posting text only.";
+  }
+  const row = await insertPostRow(text, imageUrl);
+  submitBtn.disabled = false;
+  state.myPosts.unshift({ id: row && row.id, text, time: 'Just now', image_url: imageUrl });
   msg.textContent = 'Posted to your channel.';
   document.getElementById('cpText').value = '';
+  fileInput.value = '';
   setTimeout(() => {
     document.getElementById('createPostModal').classList.add('hidden');
     msg.textContent = '';
@@ -1295,6 +1342,10 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 /* ---------- view switching ---------- */
 function setView(view){
   if(view !== 'search') lastNonSearchView = view;
+  if(view !== 'watch'){
+    const vEl = document.getElementById('watchVideoEl');
+    if(vEl && !vEl.paused) vEl.pause();
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
   document.getElementById('view-' + view).classList.add('visible');
   document.querySelectorAll('[data-view]').forEach(el => el.classList.toggle('active', el.dataset.view === view));
@@ -1815,8 +1866,9 @@ function renderChannel(who){
       const row = document.createElement('div');
       row.className = 'comment';
       row.style.position = 'relative';
+      const photoHtml = p.image_url ? `<img src="${p.image_url}" alt="" style="max-width:100%; border-radius:10px; margin-top:8px; display:block;">` : '';
       row.innerHTML = `<div class="avatar" style="${avatarStyle(who)}"></div>
-        <div class="comment-body"><span class="cu">${who}</span><span class="ct">${p.time}</span><p>${p.text}</p></div>
+        <div class="comment-body"><span class="cu">${who}</span><span class="ct">${p.time}</span><p>${p.text}</p>${photoHtml}</div>
         <button class="post-delete-btn" aria-label="Delete post" title="Delete">✕</button>`;
       row.querySelector('.post-delete-btn').addEventListener('click', () => deletePost(p, row));
       postsList.appendChild(row);
@@ -1855,8 +1907,8 @@ async function loadFromSupabase(){
     document.getElementById('authModal').classList.add('hidden');
     localStorage.setItem('isd_visited','1');
 
-    const { data: myPosts } = await sb.from('posts').select('id, content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
-    if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
+    const { data: myPosts } = await sb.from('posts').select('id, content, image_url, created_at').eq('owner', user.id).order('created_at', { ascending:false });
+    if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, image_url: p.image_url, time: new Date(p.created_at).toLocaleDateString() })); }
     document.getElementById('authModal').classList.add('hidden');
   }
 
