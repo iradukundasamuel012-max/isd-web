@@ -119,6 +119,8 @@
   .thumb{width:100%; aspect-ratio:16/9; border-radius:12px; position:relative; overflow:hidden; box-shadow:var(--shadow);}
   .thumb .dur{position:absolute; bottom:8px; right:8px; background:rgba(20,18,15,0.72); color:#fff; font-size:10.5px; padding:2px 6px; border-radius:5px; font-family:'JetBrains Mono', monospace;}
   .thumb .live-tag{position:absolute; top:8px; left:8px; background:var(--live-red); color:#fff; font-weight:800; font-size:10px; padding:3px 8px; border-radius:5px; display:flex; align-items:center; gap:5px;}
+  .thumb .card-delete-btn{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; border:none; background:rgba(20,18,15,0.72); color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; z-index:5;}
+  .thumb .card-delete-btn:hover{background:var(--live-red);}
   .thumb .live-tag::before{content:""; width:6px; height:6px; border-radius:50%; background:#fff; animation:pulse 1.4s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
   .card-title{font-size:13.5px; font-weight:700; margin-top:9px; line-height:1.35;}
@@ -186,6 +188,8 @@
   .add-comment input{flex:1; border:none; border-bottom:1.5px solid var(--line); padding:8px 2px; font-size:13.5px; font-family:inherit; background:transparent;}
   .add-comment input:focus{outline:none; border-color:var(--teal);}
   .comment{display:flex; gap:12px; margin-bottom:20px;}
+  .post-delete-btn{position:absolute; top:0; right:0; width:24px; height:24px; border-radius:50%; border:none; background:transparent; color:var(--ink-soft); font-size:12px;}
+  .post-delete-btn:hover{background:#eee0da; color:var(--live-red);}
   .comment .avatar{width:32px; height:32px;}
   .comment-body .cu{font-size:12.5px; font-weight:700;}
   .comment-body .ct{font-size:11px; color:var(--ink-soft); font-weight:500; margin-left:6px;}
@@ -270,8 +274,9 @@
     .live-hero{grid-template-columns:1fr;}
   }
   @media (max-width:700px){
-    .search-wrap{display:none;}
-    header{padding:9px 14px; gap:10px;}
+    header{padding:9px 14px; gap:10px; flex-wrap:wrap;}
+    .search-wrap{order:3; flex-basis:100%; justify-content:stretch;}
+    .search-bar-outer{max-width:none;}
     .logo .tag{display:none;}
     .pill-row{padding:12px 14px;}
     .shelves, .live-shelf-wrap{padding:0 14px;}
@@ -322,7 +327,7 @@
     <div class="field">
       <span class="purpose-label">What brings you to isd?</span>
       <div class="purpose-scroll" id="purposeRow">
-        <button class="purpose-chip" data-purpose="Entertain"><span class="lb">Entertain</span></button>
+        <button class="purpose-chip" data-purpose="Entertainment"><span class="lb">Entertainment</span></button>
         <button class="purpose-chip" data-purpose="Sport"><span class="lb">Sport</span></button>
         <button class="purpose-chip" data-purpose="Education"><span class="lb">Education</span></button>
         <button class="purpose-chip" data-purpose="Business"><span class="lb">Business</span></button>
@@ -330,6 +335,25 @@
     </div>
     <button class="btn btn-solid signup-submit" id="submitBtn" style="width:100%;">Create account</button>
     <p class="microcopy" id="submitMsg">Pick a focus and set a password to continue.</p>
+    <p class="modal-foot">Already have an account? <a id="gotoLoginFromSignup">Log in</a></p>
+  </div>
+</div>
+
+<!-- ================= Login modal ================= -->
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal-card" style="max-width:380px; text-align:left;">
+    <button class="modal-close" id="closeLoginModal" aria-label="Close">✕</button>
+    <h2>Log in to isd</h2>
+    <p class="lede">Sign back in with the email and password you used to create your channel.</p>
+    <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" placeholder="you@school.edu"></div>
+    <div class="field pw-wrap">
+      <label for="loginPw">Password</label>
+      <input id="loginPw" type="password" placeholder="Your password">
+      <button type="button" class="pw-toggle" data-target="loginPw">Show</button>
+    </div>
+    <button class="btn btn-solid signup-submit" id="loginSubmitBtn" style="width:100%;">Log in</button>
+    <p class="microcopy" id="loginMsg"></p>
+    <p class="modal-foot">New to isd? <a id="gotoSignupFromLogin">Create an account</a></p>
   </div>
 </div>
 
@@ -368,7 +392,7 @@
     <div class="upload-field" style="margin-top:16px;"><label for="uvTitle">Title</label><input id="uvTitle" type="text" placeholder="e.g. My first workshop tour"></div>
     <div class="upload-field"><label for="uvCategory">Category</label>
       <select id="uvCategory">
-        <option value="shelf-entertain">Entertain</option>
+        <option value="shelf-entertain">Entertainment</option>
         <option value="shelf-sport">Sport</option>
         <option value="shelf-education">Education</option>
         <option value="shelf-business">Business</option>
@@ -426,13 +450,14 @@
   <div class="search-wrap">
     <div class="search-bar-outer">
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search hobbies, creators, clips" autocomplete="off">
+        <input type="text" id="searchInput" placeholder="" autocomplete="off">
         <button aria-label="Search" id="searchBtn">🔍</button>
       </div>
       <div class="search-suggest" id="searchSuggest"></div>
     </div>
   </div>
   <div class="header-actions">
+    <button class="btn btn-ghost" id="loginBtn">Log in</button>
     <button class="btn btn-solid" id="createAccountBtn">Create account</button>
     <div class="create-dropdown-wrap hidden" id="createDropdownWrap">
       <button class="btn btn-solid" id="createDropdownBtn">+ Create</button>
@@ -465,7 +490,7 @@
 
     <div class="side-divider"></div>
     <div class="side-section-title">Explore</div>
-    <div class="side-item" data-jump="shelf-entertain"><span class="label">Entertain</span></div>
+    <div class="side-item" data-jump="shelf-entertain"><span class="label">Entertainment</span></div>
     <div class="side-item" data-jump="shelf-sport"><span class="label">Sport</span></div>
     <div class="side-item" data-jump="shelf-education"><span class="label">Education</span></div>
     <div class="side-item" data-jump="shelf-business"><span class="label">Business</span></div>
@@ -476,7 +501,7 @@
       <button class="pill active" data-view="home">All</button>
       <button class="pill live-pill" data-view="live">Live</button>
       <button class="pill" data-view="reels">Reels</button>
-      <button class="pill" data-jump="shelf-entertain">Entertain</button>
+      <button class="pill" data-jump="shelf-entertain">Entertainment</button>
       <button class="pill" data-jump="shelf-sport">Sport</button>
       <button class="pill" data-jump="shelf-education">Education</button>
       <button class="pill" data-jump="shelf-business">Business</button>
@@ -583,9 +608,9 @@
       <div class="page-wrap">
         <span class="back-link" id="channelBack">← Back</span>
         <div class="channel-header">
-          <div style="position:relative;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
             <div class="avatar-lg" id="channelPageAvatar" style="width:76px;height:76px;"></div>
-            <button class="btn btn-ghost hidden" id="changePhotoBtn" style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); font-size:10.5px; padding:3px 8px; white-space:nowrap;">Change photo</button>
+            <button class="btn btn-ghost hidden" id="changePhotoBtn" style="font-size:10.5px; padding:3px 10px; white-space:nowrap;">Change photo</button>
             <input type="file" id="avatarFileInput" accept="image/*" class="hidden">
           </div>
           <div>
@@ -594,7 +619,6 @@
             <p class="channel-bio" id="channelPageBio"></p>
           </div>
           <button class="btn btn-solid subscribe-btn" id="channelSubscribeBtn">Subscribe</button>
-          <button class="btn btn-ghost" id="channelCommunityBtn">Community</button>
         </div>
         <div class="side-section-title" style="margin-left:0; margin-top:26px;">Videos</div>
         <div class="results-grid" id="channelVideoGrid"></div>
@@ -690,6 +714,49 @@ function updateHeaderAvatar(){
     btn.textContent = uname ? uname.trim().charAt(0).toUpperCase() : 'I';
   }
 }
+function isOwnVideo(v){
+  return !!(state.currentUser && v.who === (state.currentUser.uname || state.currentUser.email));
+}
+async function deleteVideo(v, cardEl){
+  if(!confirm(`Delete "${v.title}"? This can't be undone.`)) return;
+  if(v.id){
+    const { error } = await sb.from('videos').delete().eq('id', v.id);
+    if(error){ alert("Couldn't delete — try again."); console.error('Supabase delete (videos) failed:', error.message); return; }
+  }
+  const ai = allVideos.indexOf(v);
+  if(ai > -1) allVideos.splice(ai, 1);
+  if(v.kind === 'video' && v.category){
+    const shelfEntry = shelfData.find(s => s.id === v.category);
+    if(shelfEntry){
+      const i2 = shelfEntry.items.indexOf(v);
+      if(i2 > -1) shelfEntry.items.splice(i2, 1);
+      const countEl = document.querySelector('#' + v.category + ' .count');
+      if(countEl) countEl.textContent = shelfEntry.items.length + ' clips';
+    }
+  } else if(v.kind === 'reel'){
+    const i2 = reelData.indexOf(v);
+    if(i2 > -1) reelData.splice(i2, 1);
+    updateReelsEmptyState();
+  } else if(v.kind === 'live'){
+    const i2 = liveItems.indexOf(v);
+    if(i2 > -1) liveItems.splice(i2, 1);
+    updateLiveHero();
+  }
+  if(cardEl) cardEl.remove();
+}
+async function deletePost(p, rowEl){
+  if(!confirm('Delete this post? This can\'t be undone.')) return;
+  if(p.id){
+    const { error } = await sb.from('posts').delete().eq('id', p.id);
+    if(error){ alert("Couldn't delete — try again."); console.error('Supabase delete (posts) failed:', error.message); return; }
+  }
+  const idx = state.myPosts.indexOf(p);
+  if(idx > -1) state.myPosts.splice(idx, 1);
+  if(rowEl) rowEl.remove();
+  if(!state.myPosts.length){
+    document.getElementById('channelPostsWrap').classList.add('hidden');
+  }
+}
 
 /* ---------- sidebar toggle + responsive init ---------- */
 const sidebar = document.getElementById('sidebar');
@@ -739,6 +806,44 @@ document.getElementById('avatarBtn').addEventListener('click', () => {
 });
 document.getElementById('closeCreateModal').addEventListener('click', () => createModal.classList.add('hidden'));
 createModal.addEventListener('click', (e) => { if(e.target === createModal) createModal.classList.add('hidden'); });
+
+/* ---------- login modal ---------- */
+const loginModal = document.getElementById('loginModal');
+document.getElementById('loginBtn').addEventListener('click', () => loginModal.classList.remove('hidden'));
+document.getElementById('closeLoginModal').addEventListener('click', () => loginModal.classList.add('hidden'));
+loginModal.addEventListener('click', (e) => { if(e.target === loginModal) loginModal.classList.add('hidden'); });
+document.getElementById('gotoLoginFromSignup').addEventListener('click', () => { createModal.classList.add('hidden'); loginModal.classList.remove('hidden'); });
+document.getElementById('gotoSignupFromLogin').addEventListener('click', () => { loginModal.classList.add('hidden'); createModal.classList.remove('hidden'); });
+
+async function activateSession(user, profile){
+  const uname = (profile && profile.uname) || user.email;
+  const purpose = profile && profile.purpose;
+  const avatarUrl = profile && profile.avatar_url;
+  const account = { id: user.id, email: user.email, uname, purpose, avatarUrl };
+  state.accounts.push(account);
+  state.currentUser = account;
+  if(avatarUrl) avatarUrlByName[uname] = avatarUrl;
+  document.getElementById('createAccountBtn').classList.add('hidden');
+  document.getElementById('loginBtn').classList.add('hidden');
+  document.getElementById('createDropdownWrap').classList.remove('hidden');
+  updateHeaderAvatar();
+  const { data: myPosts } = await sb.from('posts').select('id, content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
+  if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
+}
+
+document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const msg = document.getElementById('loginMsg');
+  if(!email || !pw){ msg.textContent = 'Enter your email and password.'; return; }
+  msg.textContent = 'Logging in…';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if(error){ msg.textContent = "Couldn't log in — check your email and password."; return; }
+  const { data: profile } = await sb.from('profiles').select('uname, purpose, avatar_url').eq('id', data.user.id).single();
+  await activateSession(data.user, profile);
+  msg.textContent = `Welcome back, ${(profile && profile.uname) || email}.`;
+  setTimeout(() => { loginModal.classList.add('hidden'); msg.textContent = ''; }, 1000);
+});
 
 /* ---------- share modal ---------- */
 const shareModal = document.getElementById('shareModal');
@@ -843,33 +948,42 @@ function addUploadedVideo(v){
   const track = document.querySelector('#' + v.category + ' .track');
   const shelfEntry = shelfData.find(s => s.id === v.category);
   if(!shelfEntry || !track) return;
+  v.kind = 'video';
+  v.action = () => openWatch(v);
   shelfEntry.items.push(v);
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
   const thumbStyle = v.thumbnail_url ? `background-image:url('${v.thumbnail_url}'); background-size:cover; background-position:center;` : `background:${gradients[hashStr(v.title)%gradients.length]}`;
+  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete">✕</button>` : '';
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <div class="thumb" style="${thumbStyle}"></div>
+    <div class="thumb" style="${thumbStyle}">${delBtn}</div>
     <div class="card-title">${v.title}</div>
     <div class="card-meta"><div class="avatar" style="${avatarStyle(v.who)}"></div><span class="who">${v.who}</span></div>
     <div class="card-stats">${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}</div>`;
   card.addEventListener('click', () => openWatch(v));
+  const del = card.querySelector('.card-delete-btn');
+  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, card); });
   track.appendChild(card);
-  allVideos.push({ ...v, kind:'video', action: () => openWatch(v) });
+  allVideos.push(v);
   const countEl = document.querySelector('#' + v.category + ' .count');
   if(countEl) countEl.textContent = shelfEntry.items.length + ' clips';
 }
 
 function addUploadedReel(v){
   const i = reelData.length;
+  v.kind = 'reel';
+  v.action = () => setView('reels');
   reelData.push(v);
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
+  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete" style="top:44px;">✕</button>` : '';
   const slide = document.createElement('div');
   slide.className = 'reel-slide';
   slide.innerHTML = `
     <div class="reel-frame" style="background:${gradients[i%gradients.length]}">
+      ${delBtn}
       <div class="reel-topbar">REEL ${i+1} / ${reelData.length}</div>
       <div class="reel-bottom">
         <div class="who"><div class="avatar" style="${avatarStyle(v.who)}"></div>${v.who}</div>
@@ -881,26 +995,33 @@ function addUploadedReel(v){
         <div><button aria-label="Share">↗</button></div>
       </div>
     </div>`;
+  const del = slide.querySelector('.card-delete-btn');
+  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, slide); });
   reelsContainer.appendChild(slide);
-  allVideos.push({ ...v, kind:'reel', action: () => setView('reels') });
+  allVideos.push(v);
   updateReelsEmptyState();
 }
 
 function addUploadedLive(v){
   const i = liveItems.length;
+  v.kind = 'live';
+  v.action = () => setView('live');
   liveItems.push(v);
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
+  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete">✕</button>` : '';
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <div class="thumb" style="background:${gradients[i%gradients.length]}"><span class="live-tag">LIVE</span></div>
+    <div class="thumb" style="background:${gradients[i%gradients.length]}"><span class="live-tag">LIVE</span>${delBtn}</div>
     <div class="card-title">${v.title}</div>
     <div class="card-meta"><div class="avatar" style="${avatarStyle(v.who)}"></div><span class="who">${v.who}</span></div>
     <div class="card-stats">Live now</div>`;
   card.addEventListener('click', () => setView('live'));
+  const del = card.querySelector('.card-delete-btn');
+  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, card); });
   liveTrack.appendChild(card);
-  allVideos.push({ ...v, kind:'live', action: () => setView('live') });
+  allVideos.push(v);
   updateLiveHero();
 }
 
@@ -941,9 +1062,10 @@ async function insertVideoRow(title, category, kind, video_url, thumbnail_url){
   return data;
 }
 async function insertPostRow(content){
-  if(!state.currentUser) return;
-  const { error } = await sb.from('posts').insert({ owner: state.currentUser.id, content });
-  if(error) console.error('Supabase insert (posts) failed:', error.message);
+  if(!state.currentUser) return null;
+  const { data, error } = await sb.from('posts').insert({ owner: state.currentUser.id, content }).select().single();
+  if(error){ console.error('Supabase insert (posts) failed:', error.message); return null; }
+  return data;
 }
 async function uploadFileToStorage(file, folder){
   if(!file || !state.currentUser) return null;
@@ -1081,8 +1203,8 @@ document.getElementById('cpSubmit').addEventListener('click', async () => {
   const msg = document.getElementById('cpMsg');
   if(!state.currentUser){ msg.textContent = 'Create an account first to post.'; return; }
   if(!text){ msg.textContent = 'Write something to post first.'; return; }
-  state.myPosts.unshift({ text, time: 'Just now' });
-  insertPostRow(text);
+  const row = await insertPostRow(text);
+  state.myPosts.unshift({ id: row && row.id, text, time: 'Just now' });
   msg.textContent = 'Posted to your channel.';
   document.getElementById('cpText').value = '';
   setTimeout(() => {
@@ -1150,6 +1272,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   localStorage.setItem('isd_visited','1');
   authModal.classList.add('hidden');
   document.getElementById('createAccountBtn').classList.add('hidden');
+  document.getElementById('loginBtn').classList.add('hidden');
   document.getElementById('createDropdownWrap').classList.remove('hidden');
   updateHeaderAvatar();
   setTimeout(() => { document.getElementById('createModal').classList.add('hidden'); }, 1400);
@@ -1364,7 +1487,7 @@ document.getElementById('commentInput').addEventListener('keydown', (e) => {
 
 /* ---------- shelves ---------- */
 const shelfData = [
-  { id:"shelf-entertain", title: "Entertain", items: [] },
+  { id:"shelf-entertain", title: "Entertainment", items: [] },
   { id:"shelf-sport", title: "Sport & Movement", items: [] },
   { id:"shelf-education", title: "Education", items: [] },
   { id:"shelf-business", title: "Business", items: [] },
@@ -1484,12 +1607,15 @@ function buildResultCard(v){
   const stat = v.kind === 'live' ? `${v.watching || ''} watching now`.trim() : v.kind === 'reel' ? 'Reel · tap to open' : `${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}`;
   const badge = v.kind === 'live' ? `<span class="live-tag">LIVE</span>` : (v.dur ? `<span class="dur">${v.dur}</span>` : '');
   const thumbStyle = v.thumbnail_url ? `background-image:url('${v.thumbnail_url}'); background-size:cover; background-position:center;` : `background:${gradients[hashStr(v.title) % gradients.length]}`;
+  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete">✕</button>` : '';
   card.innerHTML = `
-    <div class="thumb" style="${thumbStyle}">${badge}</div>
+    <div class="thumb" style="${thumbStyle}">${badge}${delBtn}</div>
     <div class="card-title">${v.title}</div>
     <div class="card-meta"><div class="avatar" style="${avatarStyle(v.who)}"></div><span class="who">${v.who}</span></div>
     <div class="card-stats">${stat}</div>`;
   card.addEventListener('click', v.action);
+  const del = card.querySelector('.card-delete-btn');
+  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, card); });
   return card;
 }
 function runSearch(query){
@@ -1673,8 +1799,11 @@ function renderChannel(who){
     state.myPosts.forEach(p => {
       const row = document.createElement('div');
       row.className = 'comment';
+      row.style.position = 'relative';
       row.innerHTML = `<div class="avatar" style="${avatarStyle(who)}"></div>
-        <div class="comment-body"><span class="cu">${who}</span><span class="ct">${p.time}</span><p>${p.text}</p></div>`;
+        <div class="comment-body"><span class="cu">${who}</span><span class="ct">${p.time}</span><p>${p.text}</p></div>
+        <button class="post-delete-btn" aria-label="Delete post" title="Delete">✕</button>`;
+      row.querySelector('.post-delete-btn').addEventListener('click', () => deletePost(p, row));
       postsList.appendChild(row);
     });
   } else {
@@ -1704,14 +1833,15 @@ async function loadFromSupabase(){
     state.accounts.push(account);
     state.currentUser = account;
     document.getElementById('createAccountBtn').classList.add('hidden');
+    document.getElementById('loginBtn').classList.add('hidden');
     document.getElementById('createDropdownWrap').classList.remove('hidden');
     if(avatarUrl){ avatarUrlByName[uname] = avatarUrl; }
     updateHeaderAvatar();
     document.getElementById('authModal').classList.add('hidden');
     localStorage.setItem('isd_visited','1');
 
-    const { data: myPosts } = await sb.from('posts').select('content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
-    if(myPosts){ state.myPosts = myPosts.map(p => ({ text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
+    const { data: myPosts } = await sb.from('posts').select('id, content, created_at').eq('owner', user.id).order('created_at', { ascending:false });
+    if(myPosts){ state.myPosts = myPosts.map(p => ({ id: p.id, text: p.content, time: new Date(p.created_at).toLocaleDateString() })); }
     document.getElementById('authModal').classList.add('hidden');
   }
 
