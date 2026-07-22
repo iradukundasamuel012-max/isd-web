@@ -1312,6 +1312,7 @@ function openWatch(a, b){
   }
 
   loadComments(v.id);
+  renderRelated(v);
 
   setView('watch');
   window.scrollTo({top:0, behavior:'smooth'});
@@ -1450,26 +1451,25 @@ document.getElementById('reelNext').addEventListener('click', () => reelsContain
 updateReelsEmptyState();
 
 /* ---------- related videos (watch page) ---------- */
-const relatedItems = [
-  ["Coldplay-style chord voicings for beginners", "fret.notes"],
-  ["Wheel-throwing a set of matching mugs", "wetclaydiary"],
-  ["Drawing hands without the fear", "mara.sketches"],
-  ["5k splits explained in plain language", "runwithtomi"],
-  ["Dovetail joints for absolute beginners", "shaveandfit"],
-  ["Home studio acoustics on a budget", "roomtone"],
-];
 const watchSide = document.getElementById('watchSide');
-relatedItems.forEach((item, i) => {
-  const [title, who] = item;
-  const el = document.createElement('div');
-  el.className = 'rel-card';
-  el.innerHTML = `
-    <div class="rel-thumb" style="background:${gradients[i%gradients.length]}"></div>
-    <div><div class="rel-title">${title}</div><div class="rel-meta">${who}</div><div class="rel-meta">${viewsMetaText(title)}</div></div>`;
-  el.addEventListener('click', () => openWatch(title, who));
-  watchSide.appendChild(el);
-  allVideos.push({ title, who, kind:'video', action: () => openWatch(title, who) });
-});
+function renderRelated(current){
+  watchSide.innerHTML = '';
+  const others = allVideos.filter(v => v.kind !== 'live' && !(v.title === current.title && v.who === current.who)).slice(-8).reverse();
+  if(!others.length){
+    watchSide.innerHTML = `<div class="empty-state">No other videos yet.</div>`;
+    return;
+  }
+  others.forEach((v, i) => {
+    const el = document.createElement('div');
+    el.className = 'rel-card';
+    const thumbStyle = v.thumbnail_url ? `background-image:url('${v.thumbnail_url}'); background-size:cover; background-position:center;` : `background:${gradients[i%gradients.length]}`;
+    el.innerHTML = `
+      <div class="rel-thumb" style="${thumbStyle}"></div>
+      <div><div class="rel-title">${v.title}</div><div class="rel-meta">${v.who}</div><div class="rel-meta">${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}</div></div>`;
+    el.addEventListener('click', () => openWatch(v));
+    watchSide.appendChild(el);
+  });
+}
 
 /* ---------- search: live filter + history ---------- */
 const searchInput = document.getElementById('searchInput');
@@ -1602,9 +1602,14 @@ function renderSubs(){
   [...state.subscriptions].forEach(who => {
     const el = document.createElement('div');
     el.className = 'subs-row';
-    el.innerHTML = `<div class="avatar-lg" style="background:${gradients[hashStr(who)%gradients.length]}"></div>
-      <div><div class="channel-name">${who}</div><div class="channel-subs">${channelSubsText(who)}</div></div>`;
+    const subsTextId = 'subs-count-' + who.replace(/[^a-zA-Z0-9]/g, '');
+    el.innerHTML = `<div class="avatar-lg" style="${avatarStyle(who)}"></div>
+      <div><div class="channel-name">${who}</div><div class="channel-subs" id="${subsTextId}">…</div></div>`;
     wrap.appendChild(el);
+    getSubscriberCount(channelIdByName[who]).then(count => {
+      const el2 = document.getElementById(subsTextId);
+      if(el2) el2.textContent = `${count} subscriber${count===1?'':'s'}`;
+    });
   });
 }
 function renderPlaylists(){
