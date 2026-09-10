@@ -121,6 +121,18 @@
   .thumb .live-tag{position:absolute; top:8px; left:8px; background:var(--live-red); color:#fff; font-weight:800; font-size:10px; padding:3px 8px; border-radius:5px; display:flex; align-items:center; gap:5px;}
   .thumb .card-delete-btn{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; border:none; background:rgba(20,18,15,0.72); color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; z-index:5;}
   .thumb .card-delete-btn:hover{background:var(--live-red);}
+  .card-menu{position:absolute; top:8px; right:8px; z-index:6;}
+  .card-menu-btn{width:26px; height:26px; border-radius:50%; border:none; background:rgba(20,18,15,0.72); color:#fff; font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center; letter-spacing:1px; padding:0;}
+  .card-menu-btn:hover{background:rgba(20,18,15,0.9);}
+  .card-menu-dropdown{position:absolute; top:30px; right:0; background:var(--paper-raised); border:1.5px solid var(--line); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; min-width:210px; padding:6px 0; max-height:min(360px, 70vh); overflow-y:auto;}
+  .card-menu-dropdown.hidden{display:none;}
+  .card-menu-item{display:flex; align-items:center; width:100%; text-align:left; padding:9px 14px; font-size:12.5px; font-weight:600; background:none; border:none; cursor:pointer; color:var(--ink); font-family:inherit;}
+  .card-menu-item:hover{background:rgba(0,0,0,0.06);}
+  .card-menu-item.danger{color:var(--live-red);}
+  .cmi-ico{display:inline-block; width:20px; margin-right:10px; text-align:center; font-size:13px;}
+  .card-menu-sep{height:1px; background:var(--line); margin:5px 0;}
+  .app-toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(16px); background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px; font-size:12.5px; font-weight:600; box-shadow:var(--shadow); z-index:999; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;}
+  .app-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
   .thumb .live-tag::before{content:""; width:6px; height:6px; border-radius:50%; background:#fff; animation:pulse 1.4s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
   .card-title{font-size:13.5px; font-weight:700; margin-top:9px; line-height:1.35;}
@@ -158,6 +170,10 @@
   .reel-actions button{background:rgba(255,255,255,0.18); backdrop-filter:blur(4px); border:none; width:42px; height:42px; border-radius:50%; color:#fff; font-size:17px;}
   .reel-actions .ct{color:#fff; font-size:10.5px; margin-top:-8px; font-family:'JetBrains Mono', monospace;}
   .reel-arrow{position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:1.5px solid var(--line); background:var(--paper-raised); box-shadow:var(--shadow); font-size:14px; z-index:5;}
+  .reel-pause-icon{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:64px; height:64px; border-radius:50%; background:rgba(0,0,0,0.45); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; z-index:3; pointer-events:none;}
+  .reel-pause-icon.hidden{display:none;}
+  .reel-heart-burst{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.4); font-size:60px; z-index:3; pointer-events:none; opacity:0; animation:heartBurst 0.7s ease forwards;}
+  @keyframes heartBurst{0%{opacity:0; transform:translate(-50%,-50%) scale(0.4);}30%{opacity:1; transform:translate(-50%,-50%) scale(1.15);}100%{opacity:0; transform:translate(-50%,-50%) scale(1);}}
   .reel-arrow.left{left:16px;} .reel-arrow.right{right:16px;}
 
   /* ---------- Watch page ---------- */
@@ -749,6 +765,119 @@ async function deleteVideo(v, cardEl){
   }
   if(cardEl) cardEl.remove();
 }
+
+/* ---------- reusable card "···" menu (YouTube-style full menu) ---------- */
+let openCardMenuDropdown = null;
+document.addEventListener('click', () => {
+  if(openCardMenuDropdown){ openCardMenuDropdown.classList.add('hidden'); openCardMenuDropdown = null; }
+});
+function showToast(msg){
+  let el = document.getElementById('appToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'appToast';
+    el.className = 'app-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function cardMenuHtml(v, topOffset){
+  const isOwn = isOwnVideo(v);
+  return `<div class="card-menu"${topOffset ? ` style="top:${topOffset};"` : ''}>
+    <button class="card-menu-btn" aria-label="More options" title="More">⋮</button>
+    <div class="card-menu-dropdown hidden">
+      <button class="card-menu-item" data-action="queue" type="button"><span class="cmi-ico">☰</span>Add to queue</button>
+      <button class="card-menu-item" data-action="watchlater" type="button"><span class="cmi-ico">🕐</span><span class="cmi-label">Save to Watch Later</span></button>
+      <button class="card-menu-item" data-action="playlist" type="button"><span class="cmi-ico">🔖</span>Save to playlist</button>
+      ${v.video_url ? `<button class="card-menu-item" data-action="download" type="button"><span class="cmi-ico">⬇</span>Download</button>` : ''}
+      <button class="card-menu-item" data-action="share" type="button"><span class="cmi-ico">↗</span>Share</button>
+      <button class="card-menu-item" data-action="notinterested" type="button"><span class="cmi-ico">🚫</span>Not interested</button>
+      <button class="card-menu-item" data-action="dontrecommend" type="button"><span class="cmi-ico">⊘</span>Don't recommend channel</button>
+      <button class="card-menu-item" data-action="report" type="button"><span class="cmi-ico">🚩</span>Report</button>
+      ${isOwn ? `<div class="card-menu-sep"></div><button class="card-menu-item danger" data-action="delete" type="button"><span class="cmi-ico">🗑</span>Delete</button>` : ''}
+    </div>
+  </div>`;
+}
+function wireCardMenu(container, v, cardEl){
+  const menu = container.querySelector('.card-menu');
+  if(!menu) return;
+  const btn = menu.querySelector('.card-menu-btn');
+  const dropdown = menu.querySelector('.card-menu-dropdown');
+  const watchLaterLabel = dropdown.querySelector('[data-action="watchlater"] .cmi-label');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !dropdown.classList.contains('hidden');
+    if(openCardMenuDropdown && openCardMenuDropdown !== dropdown) openCardMenuDropdown.classList.add('hidden');
+    if(isOpen){
+      dropdown.classList.add('hidden');
+      openCardMenuDropdown = null;
+    } else {
+      if(watchLaterLabel){
+        watchLaterLabel.textContent = state.watchLater.has(videoKey(v.title, v.who)) ? 'Remove from Watch Later' : 'Save to Watch Later';
+      }
+      dropdown.classList.remove('hidden');
+      openCardMenuDropdown = dropdown;
+    }
+  });
+  dropdown.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-action]');
+    if(!item) return;
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    openCardMenuDropdown = null;
+    const key = videoKey(v.title, v.who);
+    switch(item.dataset.action){
+      case 'queue':
+        showToast('Added to queue');
+        break;
+      case 'watchlater':
+        if(state.watchLater.has(key)){ state.watchLater.delete(key); showToast('Removed from Watch Later'); }
+        else { state.watchLater.add(key); showToast('Saved to Watch Later'); }
+        break;
+      case 'playlist':
+        showToast('Saved to playlist');
+        break;
+      case 'download':
+        if(v.video_url){
+          const a = document.createElement('a');
+          a.href = v.video_url;
+          a.download = (v.title || 'video').replace(/[^a-z0-9\-_ ]/gi, '') + '.mp4';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+        break;
+      case 'share': {
+        const shareUrl = location.origin + location.pathname + '#watch';
+        if(navigator.share){
+          navigator.share({ title: v.title, text: `Watch "${v.title}" on isd`, url: shareUrl }).catch(() => {});
+        } else if(navigator.clipboard){
+          navigator.clipboard.writeText(shareUrl).then(() => showToast('Link copied'));
+        } else {
+          showToast("Couldn't share on this browser");
+        }
+        break;
+      }
+      case 'notinterested':
+        showToast("We'll show fewer videos like this");
+        if(cardEl) cardEl.remove();
+        break;
+      case 'dontrecommend':
+        showToast(`You won't see more from ${v.who}`);
+        if(cardEl) cardEl.remove();
+        break;
+      case 'report':
+        showToast('Thanks — we\'ll take a look.');
+        break;
+      case 'delete':
+        deleteVideo(v, cardEl);
+        break;
+    }
+  });
+}
 async function deletePost(p, rowEl){
   if(!confirm('Delete this post? This can\'t be undone.')) return;
   if(p.id){
@@ -962,6 +1091,30 @@ function stopCameraPreview(){
   modal.addEventListener('click', (e) => { if(e.target === modal){ modal.classList.add('hidden'); if(modalId === 'goLiveModal') stopCameraPreview(); } });
 });
 
+function timeAgo(dateStr){
+  if(!dateStr) return '';
+  const then = new Date(dateStr).getTime();
+  if(isNaN(then)) return '';
+  const secs = Math.floor((Date.now() - then) / 1000);
+  if(secs < 60) return 'just now';
+  const mins = Math.floor(secs / 60);
+  if(mins < 60) return `${mins} minute${mins===1?'':'s'} ago`;
+  const hours = Math.floor(mins / 60);
+  if(hours < 24) return `${hours} hour${hours===1?'':'s'} ago`;
+  const days = Math.floor(hours / 24);
+  if(days < 7) return `${days} day${days===1?'':'s'} ago`;
+  const weeks = Math.floor(days / 7);
+  if(weeks < 5) return `${weeks} week${weeks===1?'':'s'} ago`;
+  const months = Math.floor(days / 30);
+  if(months < 12) return `${months} month${months===1?'':'s'} ago`;
+  const years = Math.floor(days / 365);
+  return `${years} year${years===1?'':'s'} ago`;
+}
+function statsLine(v){
+  const views = `${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}`;
+  const ago = timeAgo(v.created_at);
+  return ago ? `${views} • ${ago}` : views;
+}
 function addUploadedVideo(v){
   const track = document.querySelector('#' + v.category + ' .track');
   const shelfEntry = shelfData.find(s => s.id === v.category);
@@ -972,17 +1125,16 @@ function addUploadedVideo(v){
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
   const thumbStyle = v.thumbnail_url ? `background-image:url('${v.thumbnail_url}'); background-size:cover; background-position:center;` : `background:${gradients[hashStr(v.title)%gradients.length]}`;
-  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete">✕</button>` : '';
+  const delBtn = cardMenuHtml(v);
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
     <div class="thumb" style="${thumbStyle}">${delBtn}</div>
     <div class="card-title">${v.title}</div>
     <div class="card-meta"><div class="avatar" style="${avatarStyle(v.who)}"></div><span class="who">${v.who}</span></div>
-    <div class="card-stats">${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}</div>`;
+    <div class="card-stats">${statsLine(v)}</div>`;
   card.addEventListener('click', () => openWatch(v));
-  const del = card.querySelector('.card-delete-btn');
-  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, card); });
+  wireCardMenu(card, v, card);
   track.appendChild(card);
   allVideos.push(v);
   const countEl = document.querySelector('#' + v.category + ' .count');
@@ -996,7 +1148,7 @@ function addUploadedReel(v){
   reelData.push(v);
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
-  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete" style="top:44px;">✕</button>` : '';
+  const delBtn = cardMenuHtml(v, '44px');
   const videoTag = v.video_url ? `<video class="reel-video" src="${v.video_url}" autoplay muted loop playsinline></video>` : '';
   const slide = document.createElement('div');
   slide.className = 'reel-slide';
@@ -1015,13 +1167,56 @@ function addUploadedReel(v){
         <div><button aria-label="Share">↗</button></div>
       </div>
     </div>`;
-  const del = slide.querySelector('.card-delete-btn');
-  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, slide); });
+  wireCardMenu(slide, v, slide);
   reelsContainer.appendChild(slide);
   allVideos.push(v);
   updateReelsEmptyState();
+  wireReelPauseToggle(slide);
 }
 
+/* ---------- reel tap-to-pause / double-tap-to-like ---------- */
+function wireReelPauseToggle(slide){
+  const frame = slide.querySelector('.reel-frame');
+  const video = slide.querySelector('.reel-video');
+  if(!frame) return;
+  const pauseIcon = document.createElement('div');
+  pauseIcon.className = 'reel-pause-icon hidden';
+  pauseIcon.textContent = '▶';
+  frame.appendChild(pauseIcon);
+  const likeBtn = slide.querySelector('.reel-actions button[aria-label="Like"]');
+  const likeCt = likeBtn ? likeBtn.parentElement.querySelector('.ct') : null;
+  let liked = false;
+  function togglePlay(){
+    if(!video) return;
+    if(video.paused){ video.play(); pauseIcon.classList.add('hidden'); }
+    else { video.pause(); pauseIcon.classList.remove('hidden'); }
+  }
+  function toggleLike(){
+    if(!likeBtn) return;
+    liked = !liked;
+    likeBtn.textContent = liked ? '❤️' : '👍';
+    if(likeCt){
+      const n = parseInt(likeCt.textContent, 10) || 0;
+      likeCt.textContent = liked ? n + 1 : Math.max(0, n - 1);
+    }
+    const heart = document.createElement('div');
+    heart.className = 'reel-heart-burst';
+    heart.textContent = '❤️';
+    frame.appendChild(heart);
+    setTimeout(() => heart.remove(), 700);
+  }
+  let tapTimer = null;
+  frame.addEventListener('click', (e) => {
+    if(e.target.closest('.reel-actions') || e.target.closest('.card-menu')) return;
+    if(tapTimer){
+      clearTimeout(tapTimer);
+      tapTimer = null;
+      toggleLike();
+    } else {
+      tapTimer = setTimeout(() => { togglePlay(); tapTimer = null; }, 250);
+    }
+  });
+}
 function addUploadedLive(v){
   const i = liveItems.length;
   v.kind = 'live';
@@ -1029,7 +1224,7 @@ function addUploadedLive(v){
   liveItems.push(v);
   if(v.ownerId) channelIdByName[v.who] = v.ownerId;
   if(v.avatarUrl) avatarUrlByName[v.who] = v.avatarUrl;
-  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete">✕</button>` : '';
+  const delBtn = cardMenuHtml(v);
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
@@ -1038,8 +1233,7 @@ function addUploadedLive(v){
     <div class="card-meta"><div class="avatar" style="${avatarStyle(v.who)}"></div><span class="who">${v.who}</span></div>
     <div class="card-stats">Live now</div>`;
   card.addEventListener('click', () => setView('live'));
-  const del = card.querySelector('.card-delete-btn');
-  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, card); });
+  wireCardMenu(card, v, card);
   liveTrack.appendChild(card);
   allVideos.push(v);
   updateLiveHero();
@@ -1175,7 +1369,7 @@ document.getElementById('uvSubmit').addEventListener('click', async () => {
   const row = await insertVideoRow(title, shelfId, 'video', videoUrl, thumbUrl);
   submitBtn.disabled = false;
   if(!row){ msg.textContent = 'Something went wrong saving your video — try again.'; return; }
-  addUploadedVideo({ id: row.id, title, who, ownerId: state.currentUser.id, category: shelfId, views: 0, video_url: videoUrl, thumbnail_url: thumbUrl });
+  addUploadedVideo({ id: row.id, title, who, ownerId: state.currentUser.id, category: shelfId, views: 0, video_url: videoUrl, thumbnail_url: thumbUrl, created_at: row.created_at });
   msg.textContent = `"${title}" is live in your feed.`;
   document.getElementById('uvTitle').value = '';
   fileInput.value = '';
@@ -1217,7 +1411,7 @@ document.getElementById('urSubmit').addEventListener('click', async () => {
   const row = await insertVideoRow(cap, null, 'reel', videoUrl, thumbUrl);
   submitBtn.disabled = false;
   if(!row){ msg.textContent = 'Something went wrong saving your reel — try again.'; return; }
-  addUploadedReel({ id: row.id, title: cap, who, ownerId: state.currentUser.id, views: 0, video_url: videoUrl, thumbnail_url: thumbUrl });
+  addUploadedReel({ id: row.id, title: cap, who, ownerId: state.currentUser.id, views: 0, video_url: videoUrl, thumbnail_url: thumbUrl, created_at: row.created_at });
   msg.textContent = 'Your reel is live.';
   document.getElementById('urCaption').value = '';
   fileInput.value = '';
@@ -1236,7 +1430,7 @@ document.getElementById('glSubmit').addEventListener('click', async () => {
   const who = state.currentUser.uname || state.currentUser.email;
   const row = await insertVideoRow(title, null, 'live', null);
   if(!row){ msg.textContent = 'Something went wrong going live — try again.'; return; }
-  addUploadedLive({ id: row.id, title, who, ownerId: state.currentUser.id });
+  addUploadedLive({ id: row.id, title, who, ownerId: state.currentUser.id, created_at: row.created_at });
   msg.textContent = 'You are live!';
   document.getElementById('glTitle').value = '';
   setTimeout(() => {
@@ -1340,6 +1534,21 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 });
 
 /* ---------- view switching ---------- */
+let suppressHistoryPush = false;
+function currentViewStateSnapshot(view){
+  const st = { view };
+  if(view === 'channel'){
+    st.who = document.getElementById('channelPageName').textContent || '';
+  } else if(view === 'watch'){
+    st.videoId = currentVideo ? (currentVideo.id || null) : null;
+    st.videoTitle = currentVideo ? currentVideo.title : '';
+    st.videoWho = currentVideo ? currentVideo.who : '';
+  } else if(view === 'search'){
+    const si = document.getElementById('searchInput');
+    st.query = si ? si.value : '';
+  }
+  return st;
+}
 function setView(view){
   if(view !== 'search') lastNonSearchView = view;
   if(view !== 'watch'){
@@ -1349,7 +1558,43 @@ function setView(view){
   document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
   document.getElementById('view-' + view).classList.add('visible');
   document.querySelectorAll('[data-view]').forEach(el => el.classList.toggle('active', el.dataset.view === view));
+  if(!suppressHistoryPush){
+    history.pushState(currentViewStateSnapshot(view), '', '#' + view);
+  }
 }
+/* Restore the right in-app view when the user hits the browser/phone back
+   (or forward) button, instead of leaving the site entirely. */
+function navigateToState(st){
+  st = st || { view: 'home' };
+  suppressHistoryPush = true;
+  try{
+    if(st.view === 'channel'){
+      const who = st.who || (state.currentUser && (state.currentUser.uname || state.currentUser.email)) || '';
+      renderChannel(who);
+      setView('channel');
+    } else if(st.view === 'watch'){
+      let v = null;
+      if(st.videoId) v = allVideos.find(x => x.id === st.videoId);
+      if(!v) v = allVideos.find(x => x.title === st.videoTitle && x.who === st.videoWho);
+      if(v) openWatch(v, undefined, true); else setView('home');
+    } else if(st.view === 'search'){
+      const si = document.getElementById('searchInput');
+      if(si) si.value = st.query || '';
+      if(st.query){ runSearch(st.query); } else { setView('home'); }
+    } else if(document.getElementById('view-' + st.view)){
+      if(viewRenderers[st.view]) viewRenderers[st.view]();
+      setView(st.view);
+    } else {
+      setView('home');
+    }
+  } finally {
+    suppressHistoryPush = false;
+  }
+}
+window.addEventListener('popstate', (e) => navigateToState(e.state));
+window.addEventListener('DOMContentLoaded', () => {
+  history.replaceState(currentViewStateSnapshot('home'), '', '#home');
+});
 document.querySelectorAll('[data-view]').forEach(el => {
   el.addEventListener('click', () => {
     if(viewRenderers[el.dataset.view]) viewRenderers[el.dataset.view]();
@@ -1423,7 +1668,7 @@ async function toggleSubscription(ownerId, who, btnEl){
   paintSubCount(who, count);
 }
 
-function openWatch(a, b){
+function openWatch(a, b, fromHistory){
   let v;
   if(typeof a === 'object' && a !== null){
     v = a;
@@ -1439,7 +1684,7 @@ function openWatch(a, b){
   const subsEl = document.getElementById('channelSubs');
   subsEl.textContent = '… subscribers';
   subsEl.dataset.subsFor = v.who;
-  document.getElementById('watchMeta').textContent = `${(v.views || 0).toLocaleString()} view${(v.views || 0) === 1 ? '' : 's'}`;
+  document.getElementById('watchMeta').textContent = statsLine(v);
   document.getElementById('watchDescText').textContent = v.who ? `Shared by ${v.who} on isd.` : '';
   document.getElementById('watchAvatar').style.cssText = avatarStyle(v.who || '');
 
@@ -1493,9 +1738,9 @@ function openWatch(a, b){
   state.watchHistory.unshift(v);
   if(state.watchHistory.length > 25) state.watchHistory.length = 25;
 
-  if(v.id && v.kind !== 'live'){
+  if(v.id && v.kind !== 'live' && !fromHistory){
     v.views = (v.views || 0) + 1;
-    document.getElementById('watchMeta').textContent = `${v.views.toLocaleString()} view${v.views === 1 ? '' : 's'}`;
+    document.getElementById('watchMeta').textContent = statsLine(v);
     sb.rpc('increment_views', { video_id: v.id }).then(() => {});
   }
 
@@ -1669,18 +1914,17 @@ const searchSub = document.getElementById('searchSub');
 function buildResultCard(v){
   const card = document.createElement('div');
   card.className = 'card';
-  const stat = v.kind === 'live' ? `${v.watching || ''} watching now`.trim() : v.kind === 'reel' ? 'Reel · tap to open' : `${(v.views||0).toLocaleString()} view${(v.views||0)===1?'':'s'}`;
+  const stat = v.kind === 'live' ? `${v.watching || ''} watching now`.trim() : v.kind === 'reel' ? 'Reel · tap to open' : statsLine(v);
   const badge = v.kind === 'live' ? `<span class="live-tag">LIVE</span>` : (v.dur ? `<span class="dur">${v.dur}</span>` : '');
   const thumbStyle = v.thumbnail_url ? `background-image:url('${v.thumbnail_url}'); background-size:cover; background-position:center;` : `background:${gradients[hashStr(v.title) % gradients.length]}`;
-  const delBtn = isOwnVideo(v) ? `<button class="card-delete-btn" aria-label="Delete" title="Delete">✕</button>` : '';
+  const delBtn = cardMenuHtml(v);
   card.innerHTML = `
     <div class="thumb" style="${thumbStyle}">${badge}${delBtn}</div>
     <div class="card-title">${v.title}</div>
     <div class="card-meta"><div class="avatar" style="${avatarStyle(v.who)}"></div><span class="who">${v.who}</span></div>
     <div class="card-stats">${stat}</div>`;
   card.addEventListener('click', v.action);
-  const del = card.querySelector('.card-delete-btn');
-  if(del) del.addEventListener('click', (e) => { e.stopPropagation(); deleteVideo(v, card); });
+  wireCardMenu(card, v, card);
   return card;
 }
 function runSearch(query){
@@ -1912,12 +2156,12 @@ async function loadFromSupabase(){
     document.getElementById('authModal').classList.add('hidden');
   }
 
-  const { data: videos, error } = await sb.from('videos').select('id, title, category, kind, video_url, thumbnail_url, views, owner, profiles(uname, avatar_url)').order('created_at', { ascending:true });
+  const { data: videos, error } = await sb.from('videos').select('id, title, category, kind, video_url, thumbnail_url, views, owner, created_at, profiles(uname, avatar_url)').order('created_at', { ascending:true });
   if(error){ console.error('Supabase load (videos) failed:', error.message); return; }
   (videos || []).forEach(row => {
     const who = (row.profiles && row.profiles.uname) || 'creator';
     const avatarUrl = row.profiles && row.profiles.avatar_url;
-    const v = { id: row.id, title: row.title, who, ownerId: row.owner, category: row.category, views: row.views || 0, video_url: row.video_url, thumbnail_url: row.thumbnail_url, avatarUrl };
+    const v = { id: row.id, title: row.title, who, ownerId: row.owner, category: row.category, views: row.views || 0, video_url: row.video_url, thumbnail_url: row.thumbnail_url, avatarUrl, created_at: row.created_at };
     if(row.kind === 'video' && row.category){
       addUploadedVideo(v);
     } else if(row.kind === 'reel'){
